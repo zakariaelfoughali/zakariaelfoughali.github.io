@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: zakii-hu/zakaria-site
+  repo: zakariaelfoughali/zakaria-site
   branch: main
 
 media_folder: "assets/uploads"
