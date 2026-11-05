@@ -1,7 +1,7 @@
 // تحميل مكتبة تحويل النصوص
 const script = document.createElement('script');
 script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
-script.onload = () => { fetchPosts(); }; // لا نبدأ بجلب المقالات إلا بعد تحميل المكتبة
+script.onload = () => { fetchPosts(); }; 
 document.head.appendChild(script);
 
 const GITHUB_USER = 'zakii-hu';
@@ -52,8 +52,7 @@ async function fetchPosts() {
 }
 
 function displayPosts() {
-    // البحث عن المكان المناسب للعرض، أو إنشاء مكان جديد
-    let container = document.querySelector('main') || document.querySelector('#app');
+    let container = document.querySelector('main') || document.querySelector('#app') || document.getElementById('my-posts');
     if (!container) {
         container = document.createElement('div');
         container.id = 'my-posts';
@@ -63,7 +62,7 @@ function displayPosts() {
     let html = '<div style="padding: 20px; max-width: 800px; margin: 0 auto; color: #fff; direction: rtl;"><h2 style="margin-bottom:20px; color:#3B82F6; text-align:center;">أحدث المقالات</h2>';
     
     if (posts.length === 0) {
-        html += '<p style="text-align:center;">لا توجد مقالات بعد. اذهب إلى /admin واكتب مقالاً!</p>';
+        html += '<p style="text-align:center;">لا توجد مقالات بعد.</p>';
     } else {
         posts.forEach(post => {
             html += `
@@ -71,7 +70,7 @@ function displayPosts() {
                     <h3 style="color: #E5E7EB; margin-bottom: 5px;">${post.title}</h3>
                     <small style="color: #94A3B8;">${post.date}</small>
                     <p style="margin-top: 10px; color: #cbd5e1;">${post.excerpt}</p>
-                    <a href="#/post/${post.slug}" style="color: #3B82F6; text-decoration: none; font-weight: bold;">اقرأ المزيد &larr;</a>
+                    <a href="#/post/${encodeURIComponent(post.slug)}" style="color: #3B82F6; text-decoration: none; font-weight: bold;">اقرأ المزيد &larr;</a>
                 </div>
             `;
         });
@@ -83,7 +82,8 @@ function displayPosts() {
 function handleRouting() {
     const hash = window.location.hash;
     if (hash.startsWith('#/post/')) {
-        const slug = hash.replace('#/post/', '');
+        // هنا نقوم بفك تشفير الرابط ليتطابق مع اسم الملف
+        const slug = decodeURIComponent(hash.replace('#/post/', ''));
         const post = posts.find(p => p.slug === slug);
         
         if (post) {
@@ -100,7 +100,7 @@ function handleRouting() {
             }
         }
     } else {
-        displayPosts(); // إذا رجعنا للرئيسية، نعرض القائمة
+        displayPosts(); // العودة للقائمة الرئيسية
     }
 }
 
