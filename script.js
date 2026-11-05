@@ -9,7 +9,7 @@ const GITHUB_REPO = 'zakaria-site';
 const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/posts`;
 
 let posts = [];
-let originalMainHTML = ''; // لحفظ الصفحة الأصلية
+let originalMainHTML = ''; 
 
 async function fetchPosts() {
     try {
@@ -52,43 +52,79 @@ async function fetchPosts() {
 
 function initApp() {
     const main = document.querySelector('main') || document.body;
-    originalMainHTML = main.innerHTML; // حفظ الصفحة الأصلية قبل أي تعديل
+    originalMainHTML = main.innerHTML; 
 
     displayPostsInHome();
     handleRouting();
 
-    // إصلاح روابط القائمة العلوية
-    document.querySelectorAll('header nav a, header ul a').forEach(link => {
-        link.addEventListener('click', (e) => {
-            // إغلاق القائمة إذا كانت مفتوحة
-            const nav = document.querySelector('header nav') || document.querySelector('header ul');
-            if(nav && window.innerWidth <= 768) nav.style.display = 'none';
-
-            const text = link.innerText.trim();
-            
-            // إذا كنا في صفحة مقال، نعود للرئيسية أولاً
-            if (window.location.hash.startsWith('#/post/')) {
-                window.location.hash = '';
-                main.innerHTML = originalMainHTML;
-                displayPostsInHome();
-            }
-
-            // التمرير إلى القسم المطلوب
-            if (text.includes('الرئيسية') || text.includes('الكتابات')) {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 🛠️ إصلاح جذري للقائمة والروابط
+    const header = document.querySelector('header');
+    if (header) {
+        const btn = header.querySelector('button');
+        const nav = header.querySelector('nav') || header.querySelector('ul');
+        
+        // 1. إجبار القائمة على الفتح والإغلاق
+        if (btn && nav) {
+            btn.addEventListener('click', (e) => {
                 e.preventDefault();
-            } else {
-                const headings = document.querySelectorAll('h1, h2, h3');
-                for (let h of headings) {
-                    if (h.innerText.includes(text) && h.closest('section')) {
-                        h.closest('section').scrollIntoView({ behavior: 'smooth' });
-                        e.preventDefault();
-                        return;
+                e.stopPropagation();
+                
+                // إذا كانت مخفية، نظهرها بالقوة
+                if (nav.style.display === 'none' || getComputedStyle(nav).display === 'none') {
+                    nav.style.setProperty('display', 'flex', 'important');
+                    nav.style.setProperty('flex-direction', 'column', 'important');
+                    nav.style.setProperty('position', 'absolute', 'important');
+                    nav.style.setProperty('top', '100%', 'important');
+                    nav.style.setProperty('left', '0', 'important');
+                    nav.style.setProperty('width', '100%', 'important');
+                    nav.style.setProperty('background-color', '#05070D', 'important');
+                    nav.style.setProperty('padding', '20px', 'important');
+                    nav.style.setProperty('z-index', '1000', 'important');
+                    nav.style.setProperty('border-bottom', '1px solid #1E3A8A', 'important');
+                } else {
+                    nav.style.display = 'none';
+                }
+            });
+        }
+
+        // 2. إجبار الروابط على العمل والتمرير
+        const links = header.querySelectorAll('a');
+        links.forEach(link => {
+            link.addEventListener('click', (e) => {
+                // إغلاق القائمة بعد الضغط
+                if (nav && window.innerWidth <= 768) nav.style.display = 'none';
+
+                // إذا كنا في مقال، نرجع للرئيسية أولاً
+                if (window.location.hash.startsWith('#/post/')) {
+                    window.location.hash = '';
+                    main.innerHTML = originalMainHTML;
+                    displayPostsInHome();
+                }
+
+                const targetHash = link.getAttribute('href');
+                const text = link.innerText.trim();
+
+                // التمرير بناءً على الـ ID أو النص
+                if (targetHash && targetHash.startsWith('#') && targetHash !== '#/' && targetHash !== '#') {
+                    e.preventDefault();
+                    const targetElement = document.querySelector(targetHash);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                    }
+                } else {
+                    // إذا لم يكن هناك ID، نبحث عن العنوان بالاسم
+                    const headings = document.querySelectorAll('h1, h2, h3');
+                    for (let h of headings) {
+                        if (h.innerText.includes(text) && h.closest('section')) {
+                            e.preventDefault();
+                            h.closest('section').scrollIntoView({ behavior: 'smooth' });
+                            break;
+                        }
                     }
                 }
-            }
+            });
         });
-    });
+    }
 }
 
 function displayPostsInHome() {
@@ -114,7 +150,6 @@ function displayPostsInHome() {
     if (container) {
         container.innerHTML = postsHTML;
     } else {
-        // إذا لم يجد مكان محدد، يضع المقالات قبل الفوتر
         const section = document.createElement('section');
         section.id = 'dynamic-posts';
         section.style.cssText = 'padding: 40px 20px; max-width: 800px; margin: 0 auto; direction: rtl;';
@@ -152,7 +187,6 @@ function handleRouting() {
             });
         }
     } else {
-        // العودة للصفحة الرئيسية إذا تم إغلاق المقال
         if (main.innerHTML !== originalMainHTML) {
             main.innerHTML = originalMainHTML;
             displayPostsInHome();
