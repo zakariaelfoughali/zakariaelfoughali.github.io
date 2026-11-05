@@ -5,7 +5,7 @@ script.onload = () => { initWebsite(); };
 document.head.appendChild(script);
 
 const GITHUB_USER = 'zakariaelfoughali';
-const GITHUB_REPO = 'zakaria-site';
+const GITHUB_REPO = 'zakariaelfoughali.github.io'; // اسم المستودع الجديد
 const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/posts`;
 
 let posts = [];
@@ -14,9 +14,9 @@ let originalMainHTML = '';
 // 2. الدالة الرئيسية
 async function initWebsite() {
     const main = document.querySelector('main') || document.body;
-    originalMainHTML = main.innerHTML; 
+    originalMainHTML = main.innerHTML; // حفظ الصفحة الأصلية (التي تحتوي على Hero وعني وتواصل)
 
-    // جلب المقالات
+    // جلب المقالات من GitHub
     try {
         const response = await fetch(API_URL);
         const files = await response.json();
@@ -48,56 +48,32 @@ async function initWebsite() {
         console.log("لا توجد مقالات أو حدث خطأ.");
     }
 
-    // عرض المقالات في الرئيسية
-    displayPostsInHome();
+    // إصلاح الأزرار والقائمة
+    fixButtonsAndMenu();
     
-    // تفعيل القائمة والروابط
-    setupMenuAndLinks();
-    
-    // تفعيل التنقل بين المقالات
+    // تفعيل التنقل
     window.addEventListener('hashchange', handleRouting);
     handleRouting();
 }
 
-// 3. عرض المقالات في الصفحة الرئيسية
-function displayPostsInHome() {
-    let container = document.querySelector('.posts-grid') || document.querySelector('#posts-container');
-    
-    let postsHTML = '';
-    if (posts.length === 0) {
-        postsHTML = '<p style="text-align:center; color:#fff;">لا توجد مقالات.</p>';
-    } else {
-        posts.forEach(post => {
-            postsHTML += `
-                <div style="background: #101B33; padding: 20px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #1E3A8A; text-align:right; direction:rtl;">
-                    <h3 style="color: #E5E7EB; margin-bottom: 5px;">${post.title}</h3>
-                    <small style="color: #94A3B8;">${post.date}</small>
-                    <p style="margin-top: 10px; color: #cbd5e1;">${post.excerpt}</p>
-                    <a href="#/post/${encodeURIComponent(post.slug)}" style="color: #3B82F6; text-decoration: none; font-weight: bold;">اقرأ المزيد &larr;</a>
-                </div>
-            `;
-        });
-    }
+// 3. إصلاح الأزرار (اقرأ الكتابات / تعرف علي) والقائمة
+function fixButtonsAndMenu() {
+    // إصلاح الأزرار في أعلى الصفحة
+    const buttons = document.querySelectorAll('a');
+    buttons.forEach(btn => {
+        const text = btn.innerText.trim();
+        if (text.includes('الكتابات')) {
+            btn.setAttribute('href', '#/posts');
+        } else if (text.includes('تعرف') || text.includes('عني')) {
+            btn.setAttribute('href', '#/about');
+        } else if (text.includes('الرئيسية')) {
+            btn.setAttribute('href', '#/');
+        }
+    });
 
-    if (container) {
-        container.innerHTML = postsHTML;
-    } else {
-        const section = document.createElement('section');
-        section.id = 'dynamic-posts';
-        section.style.cssText = 'padding: 40px 20px; max-width: 800px; margin: 0 auto; direction: rtl;';
-        section.innerHTML = `<h2 style="margin-bottom:20px; color:#3B82F6; text-align:center;">أحدث المقالات</h2>` + postsHTML;
-        const footer = document.querySelector('footer');
-        if(footer) footer.before(section);
-        else document.body.appendChild(section);
-    }
-}
-
-// 4. إصلاح القائمة والروابط (بشكل إجباري)
-function setupMenuAndLinks() {
-    // إصلاح القائمة
+    // إصلاح قائمة الموبايل
     const header = document.querySelector('header');
     if (header) {
-        // نبحث عن أي زر في الهيدر
         const btns = header.querySelectorAll('button, .menu-toggle, .hamburger, i, svg');
         const nav = header.querySelector('nav') || header.querySelector('ul');
         
@@ -105,7 +81,6 @@ function setupMenuAndLinks() {
             btn.onclick = function(e) {
                 if (nav) {
                     e.preventDefault();
-                    // إذا كانت القائمة مخفية، نظهرها بشكل قائمة عمودية
                     if (nav.style.display === 'none' || nav.style.display === '') {
                         nav.style.display = 'flex';
                         nav.style.flexDirection = 'column';
@@ -124,77 +99,121 @@ function setupMenuAndLinks() {
             };
         });
 
-        // إصلاح الروابط
+        // إغلاق القائمة عند الضغط على أي رابط
         const links = header.querySelectorAll('a');
         links.forEach(link => {
-            link.onclick = function(e) {
-                // إغلاق القائمة
+            link.onclick = function() {
                 if (nav) nav.style.display = 'none';
-                
-                // إذا كنا في صفحة مقال، نعود للرئيسية أولاً
-                const main = document.querySelector('main') || document.body;
-                if (window.location.hash.startsWith('#/post/')) {
-                    window.location.hash = '';
-                    main.innerHTML = originalMainHTML;
-                    displayPostsInHome();
-                }
-
-                const text = link.innerText.trim();
-                
-                // إذا كان "الرئيسية" أو "الكتابات"، نصعد لأعلى الصفحة
-                if (text.includes('الرئيسية') || text.includes('الكتابات')) {
-                    e.preventDefault();
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                } 
-                // إذا كان "عني" أو "تواصل"، نبحث عن القسم وننزل إليه
-                else if (text.includes('عني') || text.includes('تواصل') || text.includes('اتصل')) {
-                    e.preventDefault();
-                    const headings = document.querySelectorAll('h1, h2, h3, section');
-                    for (let h of headings) {
-                        if (h.innerText.includes(text)) {
-                            h.scrollIntoView({ behavior: 'smooth' });
-                            break;
-                        }
-                    }
-                }
             };
         });
     }
 }
 
-// 5. عرض المقال عند الضغط عليه
-function handleRouting() {
-    const hash = window.location.hash;
+// 4. صفحة قائمة المقالات فقط
+function renderPostsPage() {
     const main = document.querySelector('main') || document.body;
+    let html = '<div style="padding: 40px 20px; max-width: 800px; margin: 0 auto; direction: rtl; min-height: 70vh;">';
+    html += '<h1 style="color: #3B82F6; margin-bottom: 30px; text-align: center;">كل الكتابات</h1>';
     
-    if (hash.startsWith('#/post/')) {
-        const slug = decodeURIComponent(hash.replace('#/post/', ''));
-        const post = posts.find(p => p.slug === slug);
-        
-        if (post) {
-            main.innerHTML = `
-                <div style="padding: 40px 20px; max-width: 800px; margin: 0 auto; color: #fff; line-height: 1.8; direction: rtl; min-height: 70vh;">
-                    <a href="#" id="back-btn" style="color: #3B82F6; text-decoration: none; display:inline-block; margin-bottom: 20px; font-weight:bold; font-size: 1.2rem;">&rarr; العودة للرئيسية</a>
-                    <h1 style="color: #3B82F6; margin-bottom: 10px;">${post.title}</h1>
+    if (posts.length === 0) {
+        html += '<p style="text-align:center; color:#fff;">لا توجد مقالات بعد.</p>';
+    } else {
+        posts.forEach(post => {
+            html += `
+                <div style="background: #101B33; padding: 20px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #1E3A8A; text-align:right;">
+                    <h3 style="color: #E5E7EB; margin-bottom: 5px;">${post.title}</h3>
                     <small style="color: #94A3B8;">${post.date}</small>
-                    <div style="margin-top: 30px; font-size: 1.15rem;">${marked.parse(post.content)}</div>
+                    <p style="margin-top: 10px; color: #cbd5e1;">${post.excerpt}</p>
+                    <a href="#/post/${encodeURIComponent(post.slug)}" style="color: #3B82F6; text-decoration: none; font-weight: bold;">اقرأ المزيد &larr;</a>
                 </div>
             `;
-            window.scrollTo(0,0);
+        });
+    }
+    html += '</div>';
+    main.innerHTML = html;
+}
 
-            document.getElementById('back-btn').onclick = function(e) {
-                e.preventDefault();
-                window.location.hash = '';
-                main.innerHTML = originalMainHTML;
-                displayPostsInHome();
-                setupMenuAndLinks(); // إعادة تفعيل القائمة
-            };
-        }
-    } else {
-        if (main.innerHTML !== originalMainHTML) {
-            main.innerHTML = originalMainHTML;
-            displayPostsInHome();
-            setupMenuAndLinks();
+// 5. صفحة "عني" فقط
+function renderAboutPage() {
+    const main = document.querySelector('main') || document.body;
+    
+    // نحاول استخراج قسم "عني" من الصفحة الأصلية
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = originalMainHTML;
+    let aboutSection = null;
+    
+    const sections = tempDiv.querySelectorAll('section, div');
+    for (let sec of sections) {
+        if (sec.innerText.includes('عني') || sec.innerText.includes('About')) {
+            aboutSection = sec;
+            break;
         }
     }
+
+    main.innerHTML = `<div style="padding: 40px 20px; max-width: 800px; margin: 0 auto; direction: rtl; min-height: 70vh;">
+        <h1 style="color: #3B82F6; margin-bottom: 30px; text-align: center;">تعرف علي</h1>
+        <div style="color: #cbd5e1; line-height: 1.8; font-size: 1.1rem;">
+            ${aboutSection ? aboutSection.innerHTML : '<p>معلومات "عني" غير متوفرة حالياً. يمكنك إضافتها في ملف index.html.</p>'}
+        </div>
+    </div>`;
+}
+
+// 6. صفحة الرئيسية (تجمع الهيرو والمقالات)
+function renderHomePage() {
+    const main = document.querySelector('main') || document.body;
+    main.innerHTML = originalMainHTML;
+    
+    // إعادة إدراج المقالات في الصفحة الرئيسية
+    let container = document.querySelector('.posts-grid') || document.querySelector('#posts-container');
+    if (container) {
+        let postsHTML = '';
+        posts.forEach(post => {
+            postsHTML += `
+                <div style="background: #101B33; padding: 20px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #1E3A8A; text-align:right; direction:rtl;">
+                    <h3 style="color: #E5E7EB; margin-bottom: 5px;">${post.title}</h3>
+                    <small style="color: #94A3B8;">${post.date}</small>
+                    <p style="margin-top: 10px; color: #cbd5e1;">${post.excerpt}</p>
+                    <a href="#/post/${encodeURIComponent(post.slug)}" style="color: #3B82F6; text-decoration: none; font-weight: bold;">اقرأ المزيد &larr;</a>
+                </div>
+            `;
+        });
+        container.innerHTML = postsHTML;
+    }
+    fixButtonsAndMenu(); // إعادة تفعيل الأزرار بعد إعادة بناء الصفحة
+}
+
+// 7. صفحة قراءة المقال
+function renderSinglePost(slug) {
+    const main = document.querySelector('main') || document.body;
+    const post = posts.find(p => p.slug === slug);
+    
+    if (post) {
+        main.innerHTML = `
+            <div style="padding: 40px 20px; max-width: 800px; margin: 0 auto; color: #fff; line-height: 1.8; direction: rtl; min-height: 70vh;">
+                <a href="#/posts" style="color: #3B82F6; text-decoration: none; display:inline-block; margin-bottom: 20px; font-weight:bold; font-size: 1.2rem;">&rarr; العودة للكتابات</a>
+                <h1 style="color: #3B82F6; margin-bottom: 10px;">${post.title}</h1>
+                <small style="color: #94A3B8;">${post.date}</small>
+                <div style="margin-top: 30px; font-size: 1.15rem;">${marked.parse(post.content)}</div>
+            </div>
+        `;
+    } else {
+        main.innerHTML = `<div style="text-align:center; padding:50px;"><h1>المقال غير موجود</h1><a href="#/">العودة للرئيسية</a></div>`;
+    }
+}
+
+// 8. نظام التوجيه (Routing)
+function handleRouting() {
+    const hash = window.location.hash;
+    
+    if (hash === '#/posts') {
+        renderPostsPage();
+    } else if (hash === '#/about') {
+        renderAboutPage();
+    } else if (hash.startsWith('#/post/')) {
+        const slug = decodeURIComponent(hash.replace('#/post/', ''));
+        renderSinglePost(slug);
+    } else {
+        renderHomePage();
+    }
+    window.scrollTo(0,0); // الصعود لأعلى الصفحة عند التنقل
 }
