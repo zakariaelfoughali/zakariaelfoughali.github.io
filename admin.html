@@ -1,0 +1,79 @@
+admin
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم | زكرياء الفغالي</title>
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background: #05070D; color: #E5E7EB; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 600px; background: #0B1220; padding: 30px; border-radius: 10px; border: 1px solid #1E3A8A; }
+        h2 { text-align: center; color: #3B82F6; margin-bottom: 20px; }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; background: #101B33; border: 1px solid #1E3A8A; color: #fff; border-radius: 5px; font-family: inherit; box-sizing: border-box; }
+        textarea { height: 300px; resize: vertical; }
+        button { width: 100%; padding: 15px; background: #1E3A8A; color: #fff; border: none; border-radius: 5px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #3B82F6; }
+        #message { text-align: center; margin-top: 15px; color: #22c55e; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>نشر مقال جديد</h2>
+        <input type="text" id="title" placeholder="عنوان المقال">
+        <select id="type">
+            <option value="مقالة">مقالة</option>
+            <option value="شذرة">شذرة</option>
+            <option value="قصة">قصة / رواية</option>
+            <option value="خاطرة">خاطرة</option>
+        </select>
+        <textarea id="content" placeholder="اكتب نصك هنا..."></textarea>
+        <button onclick="publishPost()">نشر الآن</button>
+        <div id="message">✅ تم النشر بنجاح! سيظهر في الموقع فوراً.</div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPNpPnlfxJK-LpLj5ftafkt-BkBkpIdl0",
+            authDomain: "zakariasite-ef589.firebaseapp.com",
+            projectId: "zakariasite-ef589",
+            storageBucket: "zakariasite-ef589.firebasestorage.app",
+            messagingSenderId: "162821766116",
+            appId: "1:162821766116:web:a365b9df5deb061999a5f1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.publishPost = async function() {
+            const title = document.getElementById('title').value;
+            const type = document.getElementById('type').value;
+            const content = document.getElementById('content').value;
+
+            if (!title || !content) {
+                alert("يرجى كتابة العنوان والمحتوى!");
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "posts"), {
+                    title: title,
+                    type: type,
+                    content: content,
+                    date: new Date().toLocaleDateString('ar-EG')
+                });
+                
+                document.getElementById('message').style.display = 'block';
+                document.getElementById('title').value = '';
+                document.getElementById('content').value = '';
+                
+                setTimeout(() => { document.getElementById('message').style.display = 'none'; }, 3000);
+            } catch (e) {
+                alert("حدث خطأ أثناء النشر: " + e.message);
+            }
+        }
+    </script>
+</body>
+</html>
