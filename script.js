@@ -48,9 +48,12 @@ async function fetchPosts() {
                 type: data.type,
                 content: data.content,
                 date: data.date,
+                timestamp: data.timestamp || 0, // لضمان الترتيب
                 excerpt: data.content.substring(0, 120) + '...'
             });
         });
+        // ترتيب المنشورات من الأحدث للأقدم
+        posts.sort((a, b) => b.timestamp - a.timestamp);
         render(); 
     } catch (e) { 
         console.error(e); 
@@ -96,9 +99,12 @@ function renderHome() {
     `;
 }
 
-function renderPostsOnly() {
-    let postsHTML = posts.length === 0 ? '<p>لا توجد مقالات بعد.</p>' : '';
-    posts.forEach(post => {
+// دالة عرض الأقسام (الفلترة)
+function renderCategory(categoryName) {
+    let filteredPosts = posts.filter(p => p.type === categoryName);
+    let postsHTML = filteredPosts.length === 0 ? `<p>لا توجد منشورات في قسم "${categoryName}" بعد.</p>` : '';
+    
+    filteredPosts.forEach(post => {
         postsHTML += `
             <div class="post-card" style="margin-bottom: 20px;">
                 <span style="background: #1E3A8A; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem; color: #fff; margin-bottom: 10px; display: inline-block;">${post.type}</span>
@@ -109,7 +115,7 @@ function renderPostsOnly() {
             </div>
         `;
     });
-    appDiv.innerHTML = `<div style="padding-top: 40px;"><h2 class="section-title">كل الكتابات</h2><div class="posts-grid">${postsHTML}</div></div>`;
+    appDiv.innerHTML = `<div style="padding-top: 40px;"><h2 class="section-title">${categoryName}</h2><div class="posts-grid">${postsHTML}</div></div>`;
 }
 
 function renderSinglePost(id) {
@@ -130,9 +136,20 @@ function renderSinglePost(id) {
 
 function render() {
     const hash = window.location.hash || '#/';
-    if (hash === '#/' || hash === '') { renderHome(); } 
-    else if (hash === '#/posts') { renderPostsOnly(); } 
-    else if (hash.startsWith('#/post/')) { renderSinglePost(decodeURIComponent(hash.replace('#/post/', ''))); } 
+    
+    if (hash === '#/' || hash === '') { 
+        renderHome(); 
+    } 
+    else if (hash === '#/posts') { 
+        renderCategory('الكل'); // عرض كل شيء
+    } 
+    else if (hash.startsWith('#/category/')) { 
+        const category = decodeURIComponent(hash.replace('#/category/', '')); 
+        renderCategory(category); 
+    } 
+    else if (hash.startsWith('#/post/')) { 
+        renderSinglePost(decodeURIComponent(hash.replace('#/post/', ''))); 
+    } 
     else if (hash === '#/about-scroll') {
         renderHome();
         setTimeout(() => document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' }), 100);
@@ -140,6 +157,7 @@ function render() {
         renderHome();
         setTimeout(() => document.getElementById('contact-section').scrollIntoView({ behavior: 'smooth' }), 100);
     }
+    
     navMenu.classList.remove('active');
     if (hash !== '#/about-scroll' && hash !== '#/contact-scroll') window.scrollTo(0, 0);
 }
