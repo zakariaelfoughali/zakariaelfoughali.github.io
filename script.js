@@ -48,12 +48,11 @@ async function fetchPosts() {
                 type: data.type,
                 content: data.content,
                 date: data.date,
-                timestamp: data.timestamp || 0, // لضمان الترتيب
+                timestamp: data.timestamp || 0,
                 excerpt: data.content.substring(0, 120) + '...'
             });
         });
-        // ترتيب المنشورات من الأحدث للأقدم
-        posts.sort((a, b) => b.timestamp - a.timestamp);
+        posts.sort((a, b) => b.timestamp - a.timestamp); // الترتيب حسب الأحدث
         render(); 
     } catch (e) { 
         console.error(e); 
@@ -101,8 +100,15 @@ function renderHome() {
 
 // دالة عرض الأقسام (الفلترة)
 function renderCategory(categoryName) {
-    let filteredPosts = posts.filter(p => p.type === categoryName);
-    let postsHTML = filteredPosts.length === 0 ? `<p>لا توجد منشورات في قسم "${categoryName}" بعد.</p>` : '';
+    let filteredPosts = posts;
+    
+    // إذا لم يكن "الكل"، نقوم بالفلترة حسب القسم
+    if (categoryName !== 'الكل') {
+        filteredPosts = posts.filter(p => p.type === categoryName);
+    }
+
+    // رسالة في حال كان القسم فارغاً
+    let postsHTML = filteredPosts.length === 0 ? `<p style="text-align:center; padding: 50px; color:#fff; font-size:1.2rem;">لا توجد منشورات في قسم "${categoryName}" بعد.</p>` : '';
     
     filteredPosts.forEach(post => {
         postsHTML += `
@@ -115,7 +121,7 @@ function renderCategory(categoryName) {
             </div>
         `;
     });
-    appDiv.innerHTML = `<div style="padding-top: 40px;"><h2 class="section-title">${categoryName}</h2><div class="posts-grid">${postsHTML}</div></div>`;
+    appDiv.innerHTML = `<div style="padding-top: 40px;"><h2 class="section-title">${categoryName === 'الكل' ? 'كل الكتابات' : categoryName}</h2><div class="posts-grid">${postsHTML}</div></div>`;
 }
 
 function renderSinglePost(id) {
@@ -141,7 +147,7 @@ function render() {
         renderHome(); 
     } 
     else if (hash === '#/posts') { 
-        renderCategory('الكل'); // عرض كل شيء
+        renderCategory('الكل'); 
     } 
     else if (hash.startsWith('#/category/')) { 
         const category = decodeURIComponent(hash.replace('#/category/', '')); 
