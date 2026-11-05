@@ -61,11 +61,12 @@ admin
 
             try {
                 await addDoc(collection(db, "posts"), {
-                    title: title,
-                    type: type,
-                    content: content,
-                    date: new Date().toLocaleDateString('ar-EG')
-                });
+    title: title,
+    type: type,
+    content: content,
+    date: new Date().toLocaleDateString('ar-EG'),
+    timestamp: Date.now()
+});
                 
                 document.getElementById('message').style.display = 'block';
                 document.getElementById('title').value = '';
