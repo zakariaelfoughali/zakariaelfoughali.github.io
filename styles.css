@@ -56,3 +56,33 @@ footer p {
     font-size: 1.4rem !important;
     color: #E5E7EB !important;
       }
+/* ===== الوضع النهاري (أزرق فاتح) ===== */
+.light-mode {
+    --bg: #e0f2fe; /* أزرق فاتح جداً */
+    --surface: #f0f9ff;
+    --surface-2: #bae6fd;
+    --primary: #0284c7;
+    --accent: #0369a1;
+    --text: #0f172a; /* لون النص داكن ليُقرأ */
+    --muted: #475569;
+    --border: rgba(2, 132, 199, 0.3);
+}
+
+.light-mode header, .light-mode footer {
+    background-color: var(--surface) !important;
+}
+
+.light-mode .post-card {
+    background: var(--surface) !important;
+    border-color: var(--surface-2) !important;
+}
+
+.light-mode #settings-panel {
+    background: var(--surface) !important;
+    color: var(--text) !important;
+}
+
+.light-mode #lang-select {
+    background: var(--bg) !important;
+    color: var(--text) !important;
+}
