@@ -86,3 +86,9 @@ footer p {
     background: var(--bg) !important;
     color: var(--text) !important;
 }
+/* إخفاء واجهة جوجل للترجمة */
+.goog-te-banner-frame.skiptranslate { display: none !important; }
+body { top: 0px !important; }
+#goog-gt-tt, .goog-te-balloon-frame { display: none !important; }
+.goog-text-highlight { background: none !important; box-shadow: none !important; }
+#google_translate_element { display: none !important; }
