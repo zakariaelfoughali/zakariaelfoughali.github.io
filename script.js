@@ -1,31 +1,27 @@
-// تحميل مكتبة لتحويل نصوص مارك داون إلى HTML
+// تحميل مكتبة تحويل النصوص
 const script = document.createElement('script');
 script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+script.onload = () => { fetchPosts(); }; // لا نبدأ بجلب المقالات إلا بعد تحميل المكتبة
 document.head.appendChild(script);
 
-// إعدادات الاتصال بمستودعك
 const GITHUB_USER = 'zakii-hu';
 const GITHUB_REPO = 'zakaria-site';
 const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/posts`;
 
 let posts = [];
 
-// جلب المقالات من GitHub
 async function fetchPosts() {
     try {
         const response = await fetch(API_URL);
         const files = await response.json();
 
-        if (!Array.isArray(files)) return; // إذا كان المجلد فارغاً
-
-        files.sort((a, b) => b.name.localeCompare(a.name)); // ترتيب من الأحدث للأقدم
+        if (!Array.isArray(files)) return;
 
         for (let file of files) {
             if (file.name.endsWith('.md')) {
                 const rawContent = await fetch(file.download_url).then(res => res.text());
-                
-                // فصل البيانات (العنوان والتاريخ) عن المحتوى
                 const parts = rawContent.split('---');
+                
                 if (parts.length >= 3) {
                     const meta = parts[1];
                     const content = parts.slice(2).join('---');
@@ -40,60 +36,72 @@ async function fetchPosts() {
                         slug: file.name.replace('.md', ''),
                         title: title,
                         date: date,
-                        content: marked.parse(content),
-                        excerpt: content.substring(0, 100) + '...'
+                        content: content,
+                        excerpt: content.replace(/(<([^>]+)>)/gi, "").substring(0, 100) + '...'
                     });
                 }
             }
         }
 
-        renderPosts();
+        displayPosts();
         handleRouting();
 
     } catch (error) {
-        console.error("Error fetching posts:", error);
+        console.error("خطأ:", error);
     }
 }
 
-// عرض المقالات في الصفحة الرئيسية
-function renderPosts() {
-    const container = document.querySelector('.posts-grid') || document.getElementById('posts-container');
-    if (!container) return;
+function displayPosts() {
+    // البحث عن المكان المناسب للعرض، أو إنشاء مكان جديد
+    let container = document.querySelector('main') || document.querySelector('#app');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'my-posts';
+        document.body.appendChild(container);
+    }
 
-    container.innerHTML = posts.map(post => `
-        <article class="post-card">
-            <h3><a href="#/post/${post.slug}">${post.title}</a></h3>
-            <span class="post-date">${post.date}</span>
-            <p>${post.excerpt}</p>
-            <a href="#/post/${post.slug}" class="read-more">اقرأ المزيد &larr;</a>
-        </article>
-    `).join('');
+    let html = '<div style="padding: 20px; max-width: 800px; margin: 0 auto; color: #fff; direction: rtl;"><h2 style="margin-bottom:20px; color:#3B82F6; text-align:center;">أحدث المقالات</h2>';
+    
+    if (posts.length === 0) {
+        html += '<p style="text-align:center;">لا توجد مقالات بعد. اذهب إلى /admin واكتب مقالاً!</p>';
+    } else {
+        posts.forEach(post => {
+            html += `
+                <div style="background: #101B33; padding: 20px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #1E3A8A;">
+                    <h3 style="color: #E5E7EB; margin-bottom: 5px;">${post.title}</h3>
+                    <small style="color: #94A3B8;">${post.date}</small>
+                    <p style="margin-top: 10px; color: #cbd5e1;">${post.excerpt}</p>
+                    <a href="#/post/${post.slug}" style="color: #3B82F6; text-decoration: none; font-weight: bold;">اقرأ المزيد &larr;</a>
+                </div>
+            `;
+        });
+    }
+    html += '</div>';
+    container.innerHTML = html;
 }
 
-// قراءة المقال عند الضغط عليه
 function handleRouting() {
     const hash = window.location.hash;
-    
     if (hash.startsWith('#/post/')) {
         const slug = hash.replace('#/post/', '');
         const post = posts.find(p => p.slug === slug);
         
         if (post) {
-            const main = document.querySelector('main');
-            if (main) {
-                main.innerHTML = `
-                    <article class="single-post" style="padding: 2rem; max-width: 800px; margin: 0 auto;">
-                        <a href="#/" style="display:inline-block; margin-bottom: 20px; color: #3B82F6; text-decoration: none;">&rarr; العودة للرئيسية</a>
-                        <h1 style="font-size: 2.5rem; margin-bottom: 1rem; color: #fff;">${post.title}</h1>
-                        <p style="color: #94A3B8; margin-bottom: 2rem;">${post.date}</p>
-                        <div class="post-content" style="line-height: 1.8; color: #E5E7EB; font-size: 1.1rem;">${post.content}</div>
-                    </article>
+            let container = document.querySelector('main') || document.querySelector('#app') || document.getElementById('my-posts');
+            if (container) {
+                container.innerHTML = `
+                    <div style="padding: 20px; max-width: 800px; margin: 0 auto; color: #fff; line-height: 1.8; direction: rtl;">
+                        <a href="#/" style="color: #3B82F6; text-decoration: none; display:inline-block; margin-bottom: 20px; font-weight:bold;">&rarr; العودة للرئيسية</a>
+                        <h1 style="color: #3B82F6; margin-bottom: 10px;">${post.title}</h1>
+                        <small style="color: #94A3B8;">${post.date}</small>
+                        <div style="margin-top: 30px; font-size: 1.1rem;">${marked.parse(post.content)}</div>
+                    </div>
                 `;
             }
         }
+    } else {
+        displayPosts(); // إذا رجعنا للرئيسية، نعرض القائمة
     }
 }
 
-// تشغيل الكود عند فتح الموقع
-window.addEventListener('DOMContentLoaded', fetchPosts);
 window.addEventListener('hashchange', handleRouting);
