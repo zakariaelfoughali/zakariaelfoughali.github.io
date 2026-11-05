@@ -248,53 +248,30 @@ if (localStorage.getItem('theme') === 'light') {
 }
 
 
-// 2. تفعيل تغيير اللغة (للواجهة فقط)
-const translations = {
-    'ar': { home: 'الرئيسية', articles: 'مقالات', shadharat: 'شذرات', qisas: 'قصص وروايات', khawatir: 'خواطر', iqtibasat: 'اقتباسات', rasail: 'رسائل', about: 'عني', contact: 'تواصل معي', admin: 'إدارة الموقع' },
-    'en': { home: 'Home', articles: 'Articles', shadharat: 'Fragments', qisas: 'Stories', khawatir: 'Thoughts', iqtibasat: 'Quotes', rasail: 'Letters', about: 'About Me', contact: 'Contact', admin: 'Admin' },
-    'fr': { home: 'Accueil', articles: 'Articles', shadharat: 'Fragments', qisas: 'Histoires', khawatir: 'Pensées', iqtibasat: 'Citations', rasail: 'Lettres', about: 'À propos', contact: 'Contact', admin: 'Admin' },
-    'de': { home: 'Startseite', articles: 'Artikel', shadharat: 'Fragmente', qisas: 'Geschichten', khawatir: 'Gedanken', iqtibasat: 'Zitate', rasail: 'Briefe', about: 'Über mich', contact: 'Kontakt', admin: 'Admin' },
-    'it': { home: 'Home', articles: 'Articoli', shadharat: 'Frammenti', qisas: 'Storie', khawatir: 'Pensieri', iqtibasat: 'Citazioni', rasail: 'Lettere', about: 'Chi sono', contact: 'Contatti', admin: 'Admin' }
-};
-
-// دالة تغيير النصوص في القائمة
-function changeUILanguage(lang) {
-    const t = translations[lang];
-    const links = document.querySelectorAll('#nav-menu a');
-    
-    if (links.length >= 10) {
-        links[0].innerText = t.home;
-        links[1].innerText = t.articles;
-        links[2].innerText = t.shadharat;
-        links[3].innerText = t.qisas;
-        links[4].innerText = t.khawatir;
-        links[5].innerText = t.iqtibasat;
-        links[6].innerText = t.rasail;
-        links[7].innerText = t.about;
-        links[8].innerText = t.contact;
-        links[9].innerText = t.admin;
-    }
-    
-    // تغيير اتجاه الصفحة
-    if (lang === 'ar') {
-        document.documentElement.dir = 'rtl';
-    } else {
-        document.documentElement.dir = 'ltr';
-    }
-}
-
+// 2. تفعيل تغيير اللغة عبر جوجل
 if (langSelect) {
+    // استرجاع اللغة المحفوظة
+    const savedLang = localStorage.getItem('lang');
+    if (savedLang) {
+        langSelect.value = savedLang;
+    }
+
     langSelect.onchange = (e) => {
         const selectedLang = e.target.value;
         localStorage.setItem('lang', selectedLang);
-        changeUILanguage(selectedLang);
+        
+        // إعداد كوكيز جوجل للترجمة
+        if (selectedLang === 'ar') {
+            // إذا اختار العربية، نحذف الكوكيز لتعود الصفحة لأصلها
+            document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
+        } else {
+            // تعيين لغة الترجمة
+            document.cookie = "googtrans=/ar/" + selectedLang + "; path=/";
+            document.cookie = "googtrans=/ar/" + selectedLang + "; path=/; domain=" + window.location.hostname;
+        }
+        
+        // إعادة تحميل الصفحة لتطبيق الترجمة
+        window.location.reload();
     };
-}
-
-// استرجاع اللغة المحفوظة
-const savedLang = localStorage.getItem('lang');
-if (savedLang && langSelect) {
-    langSelect.value = savedLang;
-    // تأخير بسيط لضمان تحميل القائمة قبل تغيير النص
-    setTimeout(() => changeUILanguage(savedLang), 500); 
 }
