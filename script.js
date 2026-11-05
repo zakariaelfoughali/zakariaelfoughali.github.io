@@ -7,15 +7,12 @@ const app = document.getElementById('app');
 const navMenu = document.getElementById('nav-menu');
 const menuBtn = document.getElementById('menu-btn');
 
-// معلومات "عني" مع رابط مكتبة نور والأيقونة الخضراء
+// معلومات "عني" التي أرسلتها
 const bioText = `
     <p>زكرياء الفغالي كاتب ومحلّل مغربي من مدينة وجدة، من مواليد 22 ماي 2000، يبلغ من العمر 26 سنة. يشتغل على الكتابة بوصفها مساحة للتفكير والتحليل واكتشاف الذات والعالم، ويكتب في الفلسفة والشذرات والمقالات والروايات والكتب الذاتية، دون أن يحصر نفسه في جنس كتابي واحد. يرى في الكتابة امتدادًا لشغف أعمق بالمعرفة والعلوم والتعلم المستمر، ويستلهم من التاريخ والحضارات والعلوم القديمة والحديثة ما يوسّع أفق النص ويمنحه عمقًا إنسانيًا.</p>
     <p>يتابع القراءة المستديمة بوصفها عادة يومية ومصدرًا للتأمل والتكوين، ويتبنى فلسفة «كايزن» اليابانية في التحسين المستمر والتراكم الهادئ، مؤمنًا بأن المعرفة مشروع لا ينتهي، وأن الكتابة الجادة تنمو بالقراءة والصبر والمراجعة. تميل كتاباته إلى المزج بين التأمل الفلسفي والتحليل الهادئ واللغة التي تقترب من الفكرة دون تعقيد، مع اهتمام خاص بالأسئلة الإنسانية الكبرى: الوجود، الهوية، الذاكرة، المعنى، وعلاقة الإنسان بعصره.</p>
     <p>يقدّم هذا الموقع مساحة لنشر نصوصه ومقالاته وشذراته وأعماله السردية والذاتية، ولتوثيق رحلته مع القراءة والكتابة والتعلم المستمر.</p>
-    
-    <p style="margin-bottom: 20px;">لديه عدة كتب منشورة على موقع "مكتبة نور" (<a href="https://www.noor-book.com/u/Zakii-EL-Foughali/books" target="_blank" style="color: #22c55e; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">رابط كتبه على مكتبة نور <svg viewBox="0 0 24 24" width="22" height="22" fill="#22c55e" style="vertical-align: middle;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg></a>)</p>
-
-    <h3>كتب منشورة:</h3>
+    <h3>كتب منشورة على مكتبة نور:</h3>
     <ul>
         <li>دهاليز القلب</li>
         <li>مذكرات بائس</li>
@@ -38,6 +35,7 @@ const contactHTML = `
     </div>
 `;
 
+// جلب المقالات
 async function fetchPosts() {
     try {
         const response = await fetch(API_URL);
@@ -64,9 +62,10 @@ async function fetchPosts() {
             }
         }
     } catch (e) { console.log(e); }
-    render(); 
+    render(); // بعد جلب المقالات، قم برسم الصفحة
 }
 
+// رسم الصفحة الرئيسية
 function renderHome() {
     let postsHTML = posts.length === 0 ? '<p>لا توجد مقالات بعد.</p>' : '';
     posts.forEach(post => {
@@ -84,10 +83,8 @@ function renderHome() {
         <div class="hero" id="home">
             <h1>Zakariaelfoughali</h1>
             <p>كتابات عربية في التأمل والأدب والفكر. نصوص هادئة تُكتب ببطء، وتُقرأ بتمهل.</p>
-            <div style="margin-top:20px;">
-                <a href="#/posts" class="btn">اقرأ الكتابات</a>
-                <a href="#/about-scroll" class="btn outline">تعرف علي</a>
-            </div>
+            <a href="#/posts" class="btn">اقرأ الكتابات</a>
+            <a href="#/about-scroll" class="btn outline">تعرف علي</a>
         </div>
         
         <section id="posts-section">
@@ -107,6 +104,7 @@ function renderHome() {
     `;
 }
 
+// رسم صفحة الكتابات فقط
 function renderPostsOnly() {
     let postsHTML = posts.length === 0 ? '<p>لا توجد مقالات بعد.</p>' : '';
     posts.forEach(post => {
@@ -128,6 +126,7 @@ function renderPostsOnly() {
     `;
 }
 
+// رسم صفحة المقال الواحد
 function renderSinglePost(slug) {
     const post = posts.find(p => p.slug === slug);
     if (!post) {
@@ -146,6 +145,7 @@ function renderSinglePost(slug) {
     `;
 }
 
+// نظام التوجيه والتنقل
 function render() {
     const hash = window.location.hash || '#/';
 
@@ -158,19 +158,23 @@ function render() {
         renderSinglePost(slug);
     } else if (hash === '#/about-scroll') {
         renderHome();
+        // انتظر جزء من الثانية حتى يتم رسم الصفحة ثم انزل للقسم
         setTimeout(() => document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' }), 100);
     } else if (hash === '#/contact-scroll') {
         renderHome();
         setTimeout(() => document.getElementById('contact-section').scrollIntoView({ behavior: 'smooth' }), 100);
     }
     
+    // إغلاق القائمة تلقائياً بعد اختيار أي رابط
     navMenu.classList.remove('active');
     
+    // اصعد لأعلى الصفحة فقط عند تغيير الصفحات الفعلية، وليس عند السكرول
     if (hash !== '#/about-scroll' && hash !== '#/contact-scroll') {
         window.scrollTo(0, 0);
     }
 }
 
+// تفعيل زر القائمة
 window.addEventListener('hashchange', render);
 
 menuBtn.addEventListener('click', (e) => {
@@ -178,6 +182,7 @@ menuBtn.addEventListener('click', (e) => {
     navMenu.classList.toggle('active');
 });
 
+// تحميل مكتبة مارك داون وتشغيل الموقع
 const markedScript = document.createElement('script');
 markedScript.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
 markedScript.onload = () => {
