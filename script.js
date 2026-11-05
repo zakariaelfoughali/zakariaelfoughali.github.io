@@ -1,26 +1,28 @@
-const GITHUB_USER = 'zakariaelfoughali';
-const GITHUB_REPO = 'zakariaelfoughali.github.io';
-const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/posts`;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBPNpPnlfxJK-LpLj5ftafkt-BkBkpIdl0",
+    authDomain: "zakariasite-ef589.firebaseapp.com",
+    projectId: "zakariasite-ef589",
+    storageBucket: "zakariasite-ef589.firebasestorage.app",
+    messagingSenderId: "162821766116",
+    appId: "1:162821766116:web:a365b9df5deb061999a5f1"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 let posts = [];
-const app = document.getElementById('app');
+const appDiv = document.getElementById('app');
 const navMenu = document.getElementById('nav-menu');
 const menuBtn = document.getElementById('menu-btn');
 
 const bioText = `
-    <p>زكرياء الفغالي كاتب ومحلّل مغربي من مدينة وجدة، من مواليد 22 ماي 2000، يبلغ من العمر 26 سنة. يشتغل على الكتابة بوصفها مساحة للتفكير والتحليل واكتشاف الذات والعالم، ويكتب في الفلسفة والشذرات والمقالات والروايات والكتب الذاتية، دون أن يحصر نفسه في جنس كتابي واحد. يرى في الكتابة امتدادًا لشغف أعمق بالمعرفة والعلوم والتعلم المستمر، ويستلهم من التاريخ والحضارات والعلوم القديمة والحديثة ما يوسّع أفق النص ويمنحه عمقًا إنسانيًا.</p>
-    <p>يتابع القراءة المستديمة بوصفها عادة يومية ومصدرًا للتأمل والتكوين، ويتبنى فلسفة «كايزن» اليابانية في التحسين المستمر والتراكم الهادئ، مؤمنًا بأن المعرفة مشروع لا ينتهي، وأن الكتابة الجادة تنمو بالقراءة والصبر والمراجعة. تميل كتاباته إلى المزج بين التأمل الفلسفي والتحليل الهادئ واللغة التي تقترب من الفكرة دون تعقيد، مع اهتمام خاص بالأسئلة الإنسانية الكبرى: الوجود، الهوية، الذاكرة، المعنى، وعلاقة الإنسان بعصره.</p>
-    <p>يقدّم هذا الموقع مساحة لنشر نصوصه ومقالاته وشذراته وأعماله السردية والذاتية، ولتوثيق رحلته مع القراءة والكتابة والتعلم المستمر.</p>
-    <p style="margin-bottom: 20px;">لديه عدة كتب منشورة على موقع "مكتبة نور" (<a href="https://www.noor-book.com/u/Zakii-EL-Foughali/books" target="_blank" style="color: #22c55e; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">رابط كتبه على مكتبة نور <svg viewBox="0 0 24 24" width="22" height="22" fill="#22c55e" style="vertical-align: middle;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg></a>)</p>
+    <p>زكرياء الفغالي كاتب ومحلّل مغربي من مدينة وجدة، من مواليد 22 ماي 2000، يبلغ من العمر 26 سنة. يشتغل على الكتابة بوصفها مساحة للتفكير والتحليل واكتشاف الذات والعالم، ويكتب في الفلسفة والشذرات والمقالات والروايات والكتب الذاتية، دون أن يحصر نفسه في جنس كتابي واحد.</p>
+    <p>لديه عدة كتب منشورة على موقع "مكتبة نور" (<a href="https://www.noor-book.com/u/Zakii-EL-Foughali/books" target="_blank" style="color: #22c55e; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">رابط كتبه على مكتبة نور <svg viewBox="0 0 24 24" width="22" height="22" fill="#22c55e" style="vertical-align: middle;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg></a>)</p>
     <h3>كتب منشورة:</h3>
-    <ul>
-        <li>دهاليز القلب</li>
-        <li>مذكرات بائس</li>
-        <li>خذلان</li>
-        <li>سديم الروح (مجموعة شعرية)</li>
-        <li>مغامرات شيرلوك هولمز: الجريمة الصامتة</li>
-        <li>مغامرات شيرلوك هولمز: لغز اختفاء جورج هاروود</li>
-    </ul>
+    <ul><li>دهاليز القلب</li><li>مذكرات بائس</li><li>خذلان</li><li>سديم الروح</li><li>مغامرات شيرلوك هولمز (جزءان)</li></ul>
 `;
 
 const contactHTML = `
@@ -36,49 +38,42 @@ const contactHTML = `
 
 async function fetchPosts() {
     try {
-        const response = await fetch(API_URL);
-        const files = await response.json();
-        if (Array.isArray(files)) {
-            for (let file of files) {
-                if (file.name.endsWith('.md')) {
-                    const rawContent = await fetch(file.download_url).then(res => res.text());
-                    const parts = rawContent.split('---');
-                    if (parts.length >= 3) {
-                        const meta = parts[1];
-                        const content = parts.slice(2).join('---');
-                        const titleMatch = meta.match(/title:\s*(.*)/);
-                        const dateMatch = meta.match(/date:\s*(.*)/);
-                        posts.push({
-                            slug: file.name.replace('.md', ''),
-                            title: titleMatch ? titleMatch[1].replace(/["']/g, '').trim() : 'بدون عنوان',
-                            date: dateMatch ? dateMatch[1].split('T')[0] : '',
-                            content: content,
-                            excerpt: content.replace(/(<([^>]+)>)/gi, "").substring(0, 100) + '...'
-                        });
-                    }
-                }
-            }
-        }
-    } catch (e) { console.log(e); }
-    render(); 
+        const querySnapshot = await getDocs(collection(db, "posts"));
+        posts = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            posts.push({
+                id: doc.id,
+                title: data.title,
+                type: data.type,
+                content: data.content,
+                date: data.date,
+                excerpt: data.content.substring(0, 120) + '...'
+            });
+        });
+        render(); 
+    } catch (e) { 
+        console.error(e); 
+        render();
+    }
 }
 
 function renderHome() {
-    let postsHTML = posts.length === 0 ? '<p>لا توجد مقالات بعد.</p>' : '';
+    let postsHTML = posts.length === 0 ? '<p>لا توجد مقالات بعد. اذهب إلى /admin.html واكتب مقالك الأول!</p>' : '';
     posts.forEach(post => {
         postsHTML += `
             <div class="post-card">
-                <h3>${post.title}</h3>
+                <span style="background: #1E3A8A; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem; color: #fff; margin-bottom: 10px; display: inline-block;">${post.type}</span>
+                <h3 style="margin-top: 5px;">${post.title}</h3>
                 <small>${post.date}</small>
                 <p>${post.excerpt}</p>
-                <a href="#/post/${encodeURIComponent(post.slug)}">اقرأ المزيد &larr;</a>
+                <a href="#/post/${post.id}">اقرأ المزيد &larr;</a>
             </div>
         `;
     });
 
-    app.innerHTML = `
+    appDiv.innerHTML = `
         <div class="hero" id="home">
-            <!-- هنا تم تغيير الاسم الكبير في المنتصف إلى العربية بخط أميري -->
             <h1 style="font-family: 'Amiri', serif; font-size: 3.5rem; color: #E5E7EB; margin-bottom: 20px;">زكرياء الفغالي</h1>
             <p>كتابات عربية في التأمل والأدب والفكر. نصوص هادئة تُكتب ببطء، وتُقرأ بتمهل.</p>
             <div style="margin-top:20px;">
@@ -86,17 +81,14 @@ function renderHome() {
                 <a href="#/about-scroll" class="btn outline">تعرف علي</a>
             </div>
         </div>
-        
         <section id="posts-section">
             <h2 class="section-title">أحدث الكتابات</h2>
             <div class="posts-grid">${postsHTML}</div>
         </section>
-
         <section id="about-section">
             <h2 class="section-title">تعرف علي</h2>
             <div class="about-text">${bioText}</div>
         </section>
-
         <section id="contact-section">
             <h2 class="section-title">تواصل معي</h2>
             ${contactHTML}
@@ -109,63 +101,47 @@ function renderPostsOnly() {
     posts.forEach(post => {
         postsHTML += `
             <div class="post-card" style="margin-bottom: 20px;">
-                <h3>${post.title}</h3>
+                <span style="background: #1E3A8A; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem; color: #fff; margin-bottom: 10px; display: inline-block;">${post.type}</span>
+                <h3 style="margin-top: 5px;">${post.title}</h3>
                 <small>${post.date}</small>
                 <p>${post.excerpt}</p>
-                <a href="#/post/${encodeURIComponent(post.slug)}">اقرأ المزيد &larr;</a>
+                <a href="#/post/${post.id}">اقرأ المزيد &larr;</a>
             </div>
         `;
     });
-
-    app.innerHTML = `
-        <div style="padding-top: 40px;">
-            <h2 class="section-title">كل الكتابات</h2>
-            <div class="posts-grid">${postsHTML}</div>
-        </div>
-    `;
+    appDiv.innerHTML = `<div style="padding-top: 40px;"><h2 class="section-title">كل الكتابات</h2><div class="posts-grid">${postsHTML}</div></div>`;
 }
 
-function renderSinglePost(slug) {
-    const post = posts.find(p => p.slug === slug);
+function renderSinglePost(id) {
+    const post = posts.find(p => p.id === id);
     if (!post) {
-        app.innerHTML = `<h2>المقال غير موجود</h2><a href="#/">العودة للرئيسية</a>`;
+        appDiv.innerHTML = `<h2>المقال غير موجود</h2><a href="#/">العودة للرئيسية</a>`;
         return;
     }
-    app.innerHTML = `
+    appDiv.innerHTML = `
         <div style="padding-top: 40px; line-height: 1.8;">
             <a href="#/" style="color: var(--accent); text-decoration: none; display: inline-block; margin-bottom: 20px; font-weight: bold;">&rarr; العودة للرئيسية</a>
             <h1 style="color: var(--accent);">${post.title}</h1>
-            <small style="color: var(--muted); display: block; margin-bottom: 20px;">${post.date}</small>
-            <div style="margin-top: 30px; font-size: 1.1rem;">
-                ${marked.parse(post.content)}
-            </div>
+            <small style="color: var(--muted); display: block; margin-bottom: 20px;">${post.date} | ${post.type}</small>
+            <div style="margin-top: 30px; font-size: 1.1rem; white-space: pre-wrap;">${post.content}</div>
         </div>
     `;
 }
 
 function render() {
     const hash = window.location.hash || '#/';
-
-    if (hash === '#/' || hash === '') {
-        renderHome();
-    } else if (hash === '#/posts') {
-        renderPostsOnly();
-    } else if (hash.startsWith('#/post/')) {
-        const slug = decodeURIComponent(hash.replace('#/post/', ''));
-        renderSinglePost(slug);
-    } else if (hash === '#/about-scroll') {
+    if (hash === '#/' || hash === '') { renderHome(); } 
+    else if (hash === '#/posts') { renderPostsOnly(); } 
+    else if (hash.startsWith('#/post/')) { renderSinglePost(decodeURIComponent(hash.replace('#/post/', ''))); } 
+    else if (hash === '#/about-scroll') {
         renderHome();
         setTimeout(() => document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' }), 100);
     } else if (hash === '#/contact-scroll') {
         renderHome();
         setTimeout(() => document.getElementById('contact-section').scrollIntoView({ behavior: 'smooth' }), 100);
     }
-    
     navMenu.classList.remove('active');
-    
-    if (hash !== '#/about-scroll' && hash !== '#/contact-scroll') {
-        window.scrollTo(0, 0);
-    }
+    if (hash !== '#/about-scroll' && hash !== '#/contact-scroll') window.scrollTo(0, 0);
 }
 
 window.addEventListener('hashchange', render);
@@ -175,11 +151,4 @@ menuBtn.addEventListener('click', (e) => {
     navMenu.classList.toggle('active');
 });
 
-const markedScript = document.createElement('script');
-markedScript.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
-markedScript.onload = () => {
-    const yearSpan = document.getElementById('year');
-    if (yearSpan) yearSpan.innerText = new Date().getFullYear();
-    fetchPosts();
-};
-document.head.appendChild(markedScript);
+fetchPosts();
