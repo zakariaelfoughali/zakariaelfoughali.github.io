@@ -125,3 +125,40 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+// كود مضمون لفتح وإغلاق قائمة الموبايل
+document.addEventListener('DOMContentLoaded', () => {
+    const header = document.querySelector('header');
+    if (!header) return;
+
+    // يبحث عن أي زر داخل الهيدر (زر القائمة)
+    const btn = header.querySelector('button');
+    // يبحث عن القائمة (nav أو ul)
+    const nav = header.querySelector('nav') || header.querySelector('ul');
+
+    if (btn && nav) {
+        // نجعل القائمة مخفية في البداية على الموبايل
+        if (window.innerWidth <= 768) {
+            nav.style.display = 'none';
+        }
+
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // إذا كانت القائمة مخفية، نظهرها بتنسيق جميل
+            if (nav.style.display === 'none' || nav.style.display === '') {
+                nav.style.display = 'flex';
+                nav.style.flexDirection = 'column';
+                nav.style.position = 'absolute';
+                nav.style.top = '100%';
+                nav.style.left = '0';
+                nav.style.width = '100%';
+                nav.style.backgroundColor = '#05070D'; // لون خلفية الموقع
+                nav.style.padding = '20px';
+                nav.style.zIndex = '1000';
+                nav.style.borderBottom = '1px solid #1E3A8A';
+            } else {
+                // إذا كانت ظاهرة، نخفيها
+                nav.style.display = 'none';
+            }
+        });
+    }
+});
