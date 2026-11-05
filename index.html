@@ -3,76 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zakariaelfoughali</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #05070D;
-            --surface: #0B1220;
-            --surface-2: #101B33;
-            --primary: #1E3A8A;
-            --accent: #3B82F6;
-            --text: #E5E7EB;
-            --muted: #94A3B8;
-            --border: rgba(59,130,246,0.25);
-        }
-        body {
-            margin: 0;
-            font-family: 'Tajawal', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            line-height: 1.8;
-        }
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            background-color: var(--surface);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            border-bottom: 1px solid var(--border);
-        }
-        .logo { font-size: 1.5rem; font-weight: bold; color: var(--text); text-decoration: none; }
-        .menu-btn { background: none; border: 1px solid var(--border); color: var(--text); padding: 5px 12px; cursor: pointer; border-radius: 5px; font-size: 1.2rem; }
-        nav { display: none; }
-        nav.active { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; width: 100%; background: var(--surface-2); padding: 20px; box-sizing: border-box; border-bottom: 1px solid var(--primary); }
-        nav a { color: var(--text); text-decoration: none; padding: 15px 0; border-bottom: 1px solid var(--surface); font-weight: bold; }
-        @media (min-width: 768px) {
-            .menu-btn { display: none; }
-            nav { display: flex !important; flex-direction: row; position: static; background: none; padding: 0; border: none; width: auto; }
-            nav a { padding: 0 15px; border: none; }
-        }
-        .hero { text-align: center; padding: 60px 20px; }
-        .hero h1 { font-size: 2.5rem; margin-bottom: 10px; color: var(--text); }
-        .hero p { color: var(--muted); max-width: 600px; margin: 0 auto 30px; font-size: 1.1rem; }
-        .btn { display: inline-block; padding: 10px 25px; background: var(--primary); color: #fff; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; font-family: inherit; font-size: 1rem; font-weight: bold; }
-        .btn.outline { background: none; border: 1px solid var(--accent); color: var(--accent); margin-right: 10px; }
-        main { max-width: 800px; margin: 0 auto; padding: 20px; min-height: 80vh; }
-        section { padding: 40px 20px; }
-        .section-title { color: var(--accent); margin-bottom: 30px; text-align: center; font-size: 1.8rem; }
-        .posts-grid { display: grid; gap: 20px; }
-        .post-card { background: var(--surface-2); padding: 20px; border-radius: 10px; border: 1px solid var(--primary); }
-        .post-card h3 { margin-top: 0; color: var(--text); font-size: 1.3rem; }
-        .post-card small { color: var(--muted); display: block; margin-bottom: 10px; }
-        .post-card p { color: var(--text); }
-        .post-card a { color: var(--accent); text-decoration: none; font-weight: bold; display: inline-block; margin-top: 10px; }
-        .about-text { color: var(--text); text-align: justify; }
-        .about-text h3 { color: var(--accent); margin-top: 30px; }
-        .about-text ul { padding-right: 20px; }
-        .about-text li { margin-bottom: 10px; }
-        .contact-links { display: flex; justify-content: center; gap: 30px; margin-top: 30px; }
-        .contact-icon { width: 60px; height: 60px; background: var(--surface-2); border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 1px solid var(--primary); text-decoration: none; color: var(--accent); transition: 0.3s; }
-        .contact-icon:hover { background: var(--primary); color: #fff; transform: scale(1.1); }
-        .contact-icon svg { width: 30px; height: 30px; fill: currentColor; }
-        footer { text-align: center; padding: 20px; background: var(--surface); color: var(--muted); margin-top: 40px; border-top: 1px solid var(--border); }
-    </style>
+    <title>Zakariaelfoughali | مدونة</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
     <header>
         <a href="#/" class="logo">Zakariaelfoughali</a>
-        <button class="menu-btn" id="menu-btn">☰</button>
+        <button class="menu-toggle" id="menu-btn">☰</button>
         <nav id="nav-menu">
             <a href="#/">الرئيسية</a>
             <a href="#/posts">الكتابات</a>
@@ -81,7 +19,9 @@
         </nav>
     </header>
 
-    <main id="app"></main>
+    <main id="app">
+        <!-- سيتم وضع المحتوى هنا ديناميكياً -->
+    </main>
 
     <footer>
         <p>&copy; <span id="year"></span> Zakariaelfoughali. جميع الحقوق محفوظة.</p>
