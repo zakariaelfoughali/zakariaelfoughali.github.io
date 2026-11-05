@@ -1,7 +1,7 @@
-// تحميل مكتبة تحويل النصوص
+// 1. تحميل مكتبة تحويل النصوص
 const script = document.createElement('script');
 script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
-script.onload = () => { fetchPosts(); }; 
+script.onload = () => { initWebsite(); }; 
 document.head.appendChild(script);
 
 const GITHUB_USER = 'zakii-hu';
@@ -11,7 +11,12 @@ const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/cont
 let posts = [];
 let originalMainHTML = ''; 
 
-async function fetchPosts() {
+// 2. الدالة الرئيسية
+async function initWebsite() {
+    const main = document.querySelector('main') || document.body;
+    originalMainHTML = main.innerHTML; 
+
+    // جلب المقالات
     try {
         const response = await fetch(API_URL);
         const files = await response.json();
@@ -25,17 +30,13 @@ async function fetchPosts() {
                     if (parts.length >= 3) {
                         const meta = parts[1];
                         const content = parts.slice(2).join('---');
-                        
                         const titleMatch = meta.match(/title:\s*(.*)/);
                         const dateMatch = meta.match(/date:\s*(.*)/);
                         
-                        const title = titleMatch ? titleMatch[1].replace(/["']/g, '').trim() : 'بدون عنوان';
-                        const date = dateMatch ? dateMatch[1].split('T')[0] : '';
-                        
                         posts.push({
                             slug: file.name.replace('.md', ''),
-                            title: title,
-                            date: date,
+                            title: titleMatch ? titleMatch[1].replace(/["']/g, '').trim() : 'بدون عنوان',
+                            date: dateMatch ? dateMatch[1].split('T')[0] : '',
                             content: content,
                             excerpt: content.replace(/(<([^>]+)>)/gi, "").substring(0, 100) + '...'
                         });
@@ -43,97 +44,28 @@ async function fetchPosts() {
                 }
             }
         }
-        initApp();
     } catch (error) {
-        console.error("خطأ في جلب المقالات:", error);
-        initApp(); 
+        console.log("لا توجد مقالات أو حدث خطأ.");
     }
-}
 
-function initApp() {
-    const main = document.querySelector('main') || document.body;
-    originalMainHTML = main.innerHTML; 
-
+    // عرض المقالات في الرئيسية
     displayPostsInHome();
+    
+    // تفعيل القائمة والروابط
+    setupMenuAndLinks();
+    
+    // تفعيل التنقل بين المقالات
+    window.addEventListener('hashchange', handleRouting);
     handleRouting();
-
-    // 🛠️ إصلاح جذري للقائمة والروابط
-    const header = document.querySelector('header');
-    if (header) {
-        const btn = header.querySelector('button');
-        const nav = header.querySelector('nav') || header.querySelector('ul');
-        
-        // 1. إجبار القائمة على الفتح والإغلاق
-        if (btn && nav) {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // إذا كانت مخفية، نظهرها بالقوة
-                if (nav.style.display === 'none' || getComputedStyle(nav).display === 'none') {
-                    nav.style.setProperty('display', 'flex', 'important');
-                    nav.style.setProperty('flex-direction', 'column', 'important');
-                    nav.style.setProperty('position', 'absolute', 'important');
-                    nav.style.setProperty('top', '100%', 'important');
-                    nav.style.setProperty('left', '0', 'important');
-                    nav.style.setProperty('width', '100%', 'important');
-                    nav.style.setProperty('background-color', '#05070D', 'important');
-                    nav.style.setProperty('padding', '20px', 'important');
-                    nav.style.setProperty('z-index', '1000', 'important');
-                    nav.style.setProperty('border-bottom', '1px solid #1E3A8A', 'important');
-                } else {
-                    nav.style.display = 'none';
-                }
-            });
-        }
-
-        // 2. إجبار الروابط على العمل والتمرير
-        const links = header.querySelectorAll('a');
-        links.forEach(link => {
-            link.addEventListener('click', (e) => {
-                // إغلاق القائمة بعد الضغط
-                if (nav && window.innerWidth <= 768) nav.style.display = 'none';
-
-                // إذا كنا في مقال، نرجع للرئيسية أولاً
-                if (window.location.hash.startsWith('#/post/')) {
-                    window.location.hash = '';
-                    main.innerHTML = originalMainHTML;
-                    displayPostsInHome();
-                }
-
-                const targetHash = link.getAttribute('href');
-                const text = link.innerText.trim();
-
-                // التمرير بناءً على الـ ID أو النص
-                if (targetHash && targetHash.startsWith('#') && targetHash !== '#/' && targetHash !== '#') {
-                    e.preventDefault();
-                    const targetElement = document.querySelector(targetHash);
-                    if (targetElement) {
-                        targetElement.scrollIntoView({ behavior: 'smooth' });
-                    }
-                } else {
-                    // إذا لم يكن هناك ID، نبحث عن العنوان بالاسم
-                    const headings = document.querySelectorAll('h1, h2, h3');
-                    for (let h of headings) {
-                        if (h.innerText.includes(text) && h.closest('section')) {
-                            e.preventDefault();
-                            h.closest('section').scrollIntoView({ behavior: 'smooth' });
-                            break;
-                        }
-                    }
-                }
-            });
-        });
-    }
 }
 
+// 3. عرض المقالات في الصفحة الرئيسية
 function displayPostsInHome() {
-    const main = document.querySelector('main') || document.body;
     let container = document.querySelector('.posts-grid') || document.querySelector('#posts-container');
     
     let postsHTML = '';
     if (posts.length === 0) {
-        postsHTML = '<p style="text-align:center; color:#fff;">لا توجد مقالات بعد.</p>';
+        postsHTML = '<p style="text-align:center; color:#fff;">لا توجد مقالات.</p>';
     } else {
         posts.forEach(post => {
             postsHTML += `
@@ -156,10 +88,81 @@ function displayPostsInHome() {
         section.innerHTML = `<h2 style="margin-bottom:20px; color:#3B82F6; text-align:center;">أحدث المقالات</h2>` + postsHTML;
         const footer = document.querySelector('footer');
         if(footer) footer.before(section);
-        else main.appendChild(section);
+        else document.body.appendChild(section);
     }
 }
 
+// 4. إصلاح القائمة والروابط (بشكل إجباري)
+function setupMenuAndLinks() {
+    // إصلاح القائمة
+    const header = document.querySelector('header');
+    if (header) {
+        // نبحث عن أي زر في الهيدر
+        const btns = header.querySelectorAll('button, .menu-toggle, .hamburger, i, svg');
+        const nav = header.querySelector('nav') || header.querySelector('ul');
+        
+        btns.forEach(btn => {
+            btn.onclick = function(e) {
+                if (nav) {
+                    e.preventDefault();
+                    // إذا كانت القائمة مخفية، نظهرها بشكل قائمة عمودية
+                    if (nav.style.display === 'none' || nav.style.display === '') {
+                        nav.style.display = 'flex';
+                        nav.style.flexDirection = 'column';
+                        nav.style.position = 'absolute';
+                        nav.style.top = '70px'; 
+                        nav.style.left = '0';
+                        nav.style.width = '100%';
+                        nav.style.backgroundColor = '#05070D';
+                        nav.style.zIndex = '9999';
+                        nav.style.padding = '20px';
+                        nav.style.borderBottom = '1px solid #1E3A8A';
+                    } else {
+                        nav.style.display = 'none';
+                    }
+                }
+            };
+        });
+
+        // إصلاح الروابط
+        const links = header.querySelectorAll('a');
+        links.forEach(link => {
+            link.onclick = function(e) {
+                // إغلاق القائمة
+                if (nav) nav.style.display = 'none';
+                
+                // إذا كنا في صفحة مقال، نعود للرئيسية أولاً
+                const main = document.querySelector('main') || document.body;
+                if (window.location.hash.startsWith('#/post/')) {
+                    window.location.hash = '';
+                    main.innerHTML = originalMainHTML;
+                    displayPostsInHome();
+                }
+
+                const text = link.innerText.trim();
+                
+                // إذا كان "الرئيسية" أو "الكتابات"، نصعد لأعلى الصفحة
+                if (text.includes('الرئيسية') || text.includes('الكتابات')) {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } 
+                // إذا كان "عني" أو "تواصل"، نبحث عن القسم وننزل إليه
+                else if (text.includes('عني') || text.includes('تواصل') || text.includes('اتصل')) {
+                    e.preventDefault();
+                    const headings = document.querySelectorAll('h1, h2, h3, section');
+                    for (let h of headings) {
+                        if (h.innerText.includes(text)) {
+                            h.scrollIntoView({ behavior: 'smooth' });
+                            break;
+                        }
+                    }
+                }
+            };
+        });
+    }
+}
+
+// 5. عرض المقال عند الضغط عليه
 function handleRouting() {
     const hash = window.location.hash;
     const main = document.querySelector('main') || document.body;
@@ -179,19 +182,19 @@ function handleRouting() {
             `;
             window.scrollTo(0,0);
 
-            document.getElementById('back-btn').addEventListener('click', (e) => {
+            document.getElementById('back-btn').onclick = function(e) {
                 e.preventDefault();
                 window.location.hash = '';
                 main.innerHTML = originalMainHTML;
                 displayPostsInHome();
-            });
+                setupMenuAndLinks(); // إعادة تفعيل القائمة
+            };
         }
     } else {
         if (main.innerHTML !== originalMainHTML) {
             main.innerHTML = originalMainHTML;
             displayPostsInHome();
+            setupMenuAndLinks();
         }
     }
 }
-
-window.addEventListener('hashchange', handleRouting);
