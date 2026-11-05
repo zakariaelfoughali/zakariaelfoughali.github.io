@@ -9,12 +9,27 @@ const GITHUB_REPO = 'zakariaelfoughali.github.io';
 const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/posts`;
 
 let posts = [];
-let originalMainHTML = ''; 
+let homeHTML = ''; 
+let aboutHTML = ''; // متغير لحفظ محتوى قسم "عني" منفصلاً
 
 // 2. الدالة الرئيسية
 async function initWebsite() {
     const main = document.querySelector('main') || document.body;
-    originalMainHTML = main.innerHTML; // حفظ الصفحة الأصلية
+    let tempDiv = document.createElement('div');
+    tempDiv.innerHTML = main.innerHTML;
+
+    // --- استخراج قسم "عني" وفصله عن الرئيسية ---
+    // نبحث عن أي قسم (section) أو حاوية (div) تحتوي على كلمة "عني"
+    const sections = tempDiv.querySelectorAll('section, div');
+    for (let sec of sections) {
+        if (sec.innerText.includes('عني') || sec.innerText.includes('About')) {
+            aboutHTML = sec.innerHTML; // نحفظ محتوى قسم عني
+            sec.remove(); // نمسحه من الصفحة الرئيسية
+            break; 
+        }
+    }
+    // حفظ الصفحة الرئيسية بعد إزالة قسم "عني"
+    homeHTML = tempDiv.innerHTML; 
 
     // جلب المقالات من GitHub
     try {
@@ -49,43 +64,48 @@ async function initWebsite() {
     // إصلاح الأزرار والقائمة
     fixButtonsAndMenu();
     
-    // تشغيل التنقل
+    // تشغيل نظام التنقل
     window.addEventListener('hashchange', handleRouting);
     handleRouting();
 }
 
-// 3. إصلاح الأزرار (بشكل إجباري) والقائمة
+// 3. إصلاح الأزرار والقائمة (إجبارها على تغيير الرابط)
 function fixButtonsAndMenu() {
-    // البحث عن أي زر أو رابط في الصفحة
     const clickables = document.querySelectorAll('a, button, .btn');
     
     clickables.forEach(el => {
         const text = el.innerText.trim();
         
+        // زر اقرأ الكتابات
         if (text.includes('الكتابات') || text.includes('اقرأ')) {
+            el.setAttribute('href', '#/posts');
             el.onclick = function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                window.location.hash = '#/posts'; // الانتقال لصفحة المقالات
+                window.location.hash = '#/posts';
             };
         } 
+        // زر تعرف علي (Hero) ورابط عني (القائمة)
         else if (text.includes('تعرف') || text.includes('عني')) {
+            el.setAttribute('href', '#/about');
             el.onclick = function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                window.location.hash = '#/about'; // الانتقال لصفحة عني
+                window.location.hash = '#/about'; // يأخذك لصفحة عني المستقلة
             };
         } 
+        // رابط الرئيسية
         else if (text.includes('الرئيسية')) {
+            el.setAttribute('href', '#/');
             el.onclick = function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                window.location.hash = '#/'; // العودة للرئيسية
+                window.location.hash = '#/';
             };
         }
     });
 
-    // تفعيل قائمة الموبايل (الخطوط الثلاثة)
+    // قائمة الموبايل
     const header = document.querySelector('header');
     if (header) {
         const btns = header.querySelectorAll('button, .menu-toggle, .hamburger, i, svg');
@@ -139,36 +159,25 @@ function renderPostsPage() {
     main.innerHTML = html;
 }
 
-// 5. صفحة "عني"
+// 5. صفحة "عني" المستقلة (تحتوي فقط على معلوماتك)
 function renderAboutPage() {
     const main = document.querySelector('main') || document.body;
     
-    // استخراج قسم "عني" من الصفحة الأصلية
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = originalMainHTML;
-    let aboutSection = null;
-    
-    const sections = tempDiv.querySelectorAll('section, div');
-    for (let sec of sections) {
-        if (sec.innerText.includes('عني') || sec.innerText.includes('About')) {
-            aboutSection = sec;
-            break;
-        }
-    }
-
     main.innerHTML = `<div style="padding: 40px 20px; max-width: 800px; margin: 0 auto; direction: rtl; min-height: 70vh;">
         <h1 style="color: #3B82F6; margin-bottom: 30px; text-align: center;">تعرف علي</h1>
         <div style="color: #cbd5e1; line-height: 1.8; font-size: 1.1rem;">
-            ${aboutSection ? aboutSection.innerHTML : '<p>معلومات "عني" غير متوفرة حالياً.</p>'}
+            ${aboutHTML ? aboutHTML : '<p>معلومات "عني" غير متوفرة حالياً.</p>'}
         </div>
     </div>`;
 }
 
-// 6. صفحة الرئيسية
+// 6. صفحة الرئيسية (بدون قسم عني)
 function renderHomePage() {
     const main = document.querySelector('main') || document.body;
-    main.innerHTML = originalMainHTML;
+    // نعيد بناء الرئيسية (التي مسحنا منها قسم "عني")
+    main.innerHTML = homeHTML; 
     
+    // نضع المقالات في مكانها
     let container = document.querySelector('.posts-grid') || document.querySelector('#posts-container');
     if (container) {
         let postsHTML = '';
@@ -184,10 +193,10 @@ function renderHomePage() {
         });
         container.innerHTML = postsHTML;
     }
-    setTimeout(fixButtonsAndMenu, 100); // إعادة تفعيل الأزرار بعد تحميل الرئيسية
+    setTimeout(fixButtonsAndMenu, 100); 
 }
 
-// 7. صفحة المقال
+// 7. صفحة قراءة المقال
 function renderSinglePost(slug) {
     const main = document.querySelector('main') || document.body;
     const post = posts.find(p => p.slug === slug);
@@ -206,19 +215,18 @@ function renderSinglePost(slug) {
     }
 }
 
-// 8. التنقل
+// 8. نظام التوجيه (يقرر أي صفحة تظهر)
 function handleRouting() {
     const hash = window.location.hash;
     
-    if (hash === '#/posts') {
-        renderPostsPage();
-    } else if (hash === '#/about') {
-        renderAboutPage();
+    if (hash === '#/about') {
+        renderAboutPage(); // صفحة عني فقط
+    } else if (hash === '#/posts') {
+        renderPostsPage(); // صفحة المقالات فقط
     } else if (hash.startsWith('#/post/')) {
-        const slug = decodeURIComponent(hash.replace('#/post/', ''));
-        renderSinglePost(slug);
+        renderSinglePost(decodeURIComponent(hash.replace('#/post/', ''))); // صفحة قراءة مقال
     } else {
-        renderHomePage();
+        renderHomePage(); // الرئيسية (التي لا تحتوي على قسم عني)
     }
-    window.scrollTo(0,0); 
+    window.scrollTo(0,0); // دائماً اصعد لأعلى عند تغيير الصفحة
 }
