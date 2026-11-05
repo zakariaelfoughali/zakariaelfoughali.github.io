@@ -205,3 +205,96 @@ navMenu.querySelectorAll('a').forEach(link => {
 });
 
 fetchPosts();
+// ==========================================
+// إعدادات الموقع (اللغة والوضع النهاري)
+// ==========================================
+
+// 1. تفعيل الوضع النهاري/الليلي
+const settingsBtn = document.getElementById('settings-btn');
+const settingsPanel = document.getElementById('settings-panel');
+const themeToggle = document.getElementById('theme-toggle');
+const langSelect = document.getElementById('lang-select');
+
+// فتح وإغلاق لوحة الإعدادات
+if (settingsBtn) {
+    settingsBtn.onclick = (e) => {
+        e.stopPropagation();
+        settingsPanel.style.display = settingsPanel.style.display === 'none' ? 'block' : 'none';
+    };
+}
+
+// إغلاق اللوحة عند النقر خارجها
+document.addEventListener('click', (e) => {
+    if (settingsPanel && settingsBtn && !settingsPanel.contains(e.target) && e.target !== settingsBtn) {
+        settingsPanel.style.display = 'none';
+    }
+});
+
+// تبديل الوضع
+if (themeToggle) {
+    themeToggle.onclick = () => {
+        document.body.classList.toggle('light-mode');
+        if (document.body.classList.contains('light-mode')) {
+            localStorage.setItem('theme', 'light');
+        } else {
+            localStorage.setItem('theme', 'dark');
+        }
+    };
+}
+
+// استرجاع الوضع المحفوظ عند فتح الموقع
+if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light-mode');
+}
+
+
+// 2. تفعيل تغيير اللغة (للواجهة فقط)
+const translations = {
+    'ar': { home: 'الرئيسية', articles: 'مقالات', shadharat: 'شذرات', qisas: 'قصص وروايات', khawatir: 'خواطر', iqtibasat: 'اقتباسات', rasail: 'رسائل', about: 'عني', contact: 'تواصل معي', admin: 'إدارة الموقع' },
+    'en': { home: 'Home', articles: 'Articles', shadharat: 'Fragments', qisas: 'Stories', khawatir: 'Thoughts', iqtibasat: 'Quotes', rasail: 'Letters', about: 'About Me', contact: 'Contact', admin: 'Admin' },
+    'fr': { home: 'Accueil', articles: 'Articles', shadharat: 'Fragments', qisas: 'Histoires', khawatir: 'Pensées', iqtibasat: 'Citations', rasail: 'Lettres', about: 'À propos', contact: 'Contact', admin: 'Admin' },
+    'de': { home: 'Startseite', articles: 'Artikel', shadharat: 'Fragmente', qisas: 'Geschichten', khawatir: 'Gedanken', iqtibasat: 'Zitate', rasail: 'Briefe', about: 'Über mich', contact: 'Kontakt', admin: 'Admin' },
+    'it': { home: 'Home', articles: 'Articoli', shadharat: 'Frammenti', qisas: 'Storie', khawatir: 'Pensieri', iqtibasat: 'Citazioni', rasail: 'Lettere', about: 'Chi sono', contact: 'Contatti', admin: 'Admin' }
+};
+
+// دالة تغيير النصوص في القائمة
+function changeUILanguage(lang) {
+    const t = translations[lang];
+    const links = document.querySelectorAll('#nav-menu a');
+    
+    if (links.length >= 10) {
+        links[0].innerText = t.home;
+        links[1].innerText = t.articles;
+        links[2].innerText = t.shadharat;
+        links[3].innerText = t.qisas;
+        links[4].innerText = t.khawatir;
+        links[5].innerText = t.iqtibasat;
+        links[6].innerText = t.rasail;
+        links[7].innerText = t.about;
+        links[8].innerText = t.contact;
+        links[9].innerText = t.admin;
+    }
+    
+    // تغيير اتجاه الصفحة
+    if (lang === 'ar') {
+        document.documentElement.dir = 'rtl';
+    } else {
+        document.documentElement.dir = 'ltr';
+    }
+}
+
+if (langSelect) {
+    langSelect.onchange = (e) => {
+        const selectedLang = e.target.value;
+        localStorage.setItem('lang', selectedLang);
+        changeUILanguage(selectedLang);
+    };
+}
+
+// استرجاع اللغة المحفوظة
+const savedLang = localStorage.getItem('lang');
+if (savedLang && langSelect) {
+    langSelect.value = savedLang;
+    // تأخير بسيط لضمان تحميل القائمة قبل تغيير النص
+    setTimeout(() => changeUILanguage(savedLang), 500); 
+}
