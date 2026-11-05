@@ -185,3 +185,12 @@ markedScript.onload = () => {
     fetchPosts();
 };
 document.head.appendChild(markedScript);
+// كود إجباري لتثبيت الاسم العربي في الأسفل
+setTimeout(function() {
+    var footerP = document.querySelector('footer p');
+    if(footerP) {
+        footerP.innerHTML = '&copy; ' + new Date().getFullYear() + ' زكرياء الفغالي. جميع الحقوق محفوظة.';
+        footerP.style.setProperty('font-family', "'Amiri', serif", 'important');
+        footerP.style.setProperty('font-size', '1.5rem', 'important');
+    }
+}, 1000);
