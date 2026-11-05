@@ -4,7 +4,7 @@ script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
 script.onload = () => { initWebsite(); }; 
 document.head.appendChild(script);
 
-const GITHUB_USER = 'zakii-hu';
+const GITHUB_USER = 'zakariaelfoughali';
 const GITHUB_REPO = 'zakaria-site';
 const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/posts`;
 
