@@ -176,23 +176,12 @@ menuBtn.addEventListener('click', (e) => {
     navMenu.classList.toggle('active');
 });
 
-// --- إعدادات الفوتر والخط ---
+// تحميل مكتبة Marked وتشغيل الموقع
 const markedScript = document.createElement('script');
 markedScript.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
 markedScript.onload = () => {
-    // تغيير السنة
     const yearSpan = document.getElementById('year');
-    if (yearSpan) yearSpan.innerText = new Date().getFullYear();
-    
-    // تغيير اسم الفوتر للعربية وإضافة خط أميري
-    const footerText = document.querySelector('footer p');
-    if (footerText) {
-        footerText.innerHTML = `&copy; <span>${new Date().getFullYear()}</span> زكرياء الفغالي. جميع الحقوق محفوظة.`;
-        footerText.style.setProperty('font-family', "'Amiri', serif", 'important');
-        footerText.style.setProperty('font-size', '1.4rem', 'important');
-        footerText.style.setProperty('color', '#E5E7EB', 'important');
-    }
-    
+    if (yearSpan) yearSpan.innerText = new Date().getFullYear(); // فقط يضع السنة، ولا يلمس الاسم
     fetchPosts();
 };
 document.head.appendChild(markedScript);
