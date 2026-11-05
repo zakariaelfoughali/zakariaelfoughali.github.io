@@ -5,7 +5,7 @@ script.onload = () => { initWebsite(); };
 document.head.appendChild(script);
 
 const GITHUB_USER = 'zakariaelfoughali';
-const GITHUB_REPO = 'zakariaelfoughali.github.io'; // اسم المستودع الجديد
+const GITHUB_REPO = 'zakariaelfoughali.github.io';
 const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/posts`;
 
 let posts = [];
@@ -14,19 +14,17 @@ let originalMainHTML = '';
 // 2. الدالة الرئيسية
 async function initWebsite() {
     const main = document.querySelector('main') || document.body;
-    originalMainHTML = main.innerHTML; // حفظ الصفحة الأصلية (التي تحتوي على Hero وعني وتواصل)
+    originalMainHTML = main.innerHTML; // حفظ الصفحة الأصلية
 
     // جلب المقالات من GitHub
     try {
         const response = await fetch(API_URL);
         const files = await response.json();
-
         if (Array.isArray(files)) {
             for (let file of files) {
                 if (file.name.endsWith('.md')) {
                     const rawContent = await fetch(file.download_url).then(res => res.text());
                     const parts = rawContent.split('---');
-                    
                     if (parts.length >= 3) {
                         const meta = parts[1];
                         const content = parts.slice(2).join('---');
@@ -51,27 +49,43 @@ async function initWebsite() {
     // إصلاح الأزرار والقائمة
     fixButtonsAndMenu();
     
-    // تفعيل التنقل
+    // تشغيل التنقل
     window.addEventListener('hashchange', handleRouting);
     handleRouting();
 }
 
-// 3. إصلاح الأزرار (اقرأ الكتابات / تعرف علي) والقائمة
+// 3. إصلاح الأزرار (بشكل إجباري) والقائمة
 function fixButtonsAndMenu() {
-    // إصلاح الأزرار في أعلى الصفحة
-    const buttons = document.querySelectorAll('a');
-    buttons.forEach(btn => {
-        const text = btn.innerText.trim();
-        if (text.includes('الكتابات')) {
-            btn.setAttribute('href', '#/posts');
-        } else if (text.includes('تعرف') || text.includes('عني')) {
-            btn.setAttribute('href', '#/about');
-        } else if (text.includes('الرئيسية')) {
-            btn.setAttribute('href', '#/');
+    // البحث عن أي زر أو رابط في الصفحة
+    const clickables = document.querySelectorAll('a, button, .btn');
+    
+    clickables.forEach(el => {
+        const text = el.innerText.trim();
+        
+        if (text.includes('الكتابات') || text.includes('اقرأ')) {
+            el.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.hash = '#/posts'; // الانتقال لصفحة المقالات
+            };
+        } 
+        else if (text.includes('تعرف') || text.includes('عني')) {
+            el.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.hash = '#/about'; // الانتقال لصفحة عني
+            };
+        } 
+        else if (text.includes('الرئيسية')) {
+            el.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.hash = '#/'; // العودة للرئيسية
+            };
         }
     });
 
-    // إصلاح قائمة الموبايل
+    // تفعيل قائمة الموبايل (الخطوط الثلاثة)
     const header = document.querySelector('header');
     if (header) {
         const btns = header.querySelectorAll('button, .menu-toggle, .hamburger, i, svg');
@@ -98,18 +112,10 @@ function fixButtonsAndMenu() {
                 }
             };
         });
-
-        // إغلاق القائمة عند الضغط على أي رابط
-        const links = header.querySelectorAll('a');
-        links.forEach(link => {
-            link.onclick = function() {
-                if (nav) nav.style.display = 'none';
-            };
-        });
     }
 }
 
-// 4. صفحة قائمة المقالات فقط
+// 4. صفحة قائمة المقالات
 function renderPostsPage() {
     const main = document.querySelector('main') || document.body;
     let html = '<div style="padding: 40px 20px; max-width: 800px; margin: 0 auto; direction: rtl; min-height: 70vh;">';
@@ -133,11 +139,11 @@ function renderPostsPage() {
     main.innerHTML = html;
 }
 
-// 5. صفحة "عني" فقط
+// 5. صفحة "عني"
 function renderAboutPage() {
     const main = document.querySelector('main') || document.body;
     
-    // نحاول استخراج قسم "عني" من الصفحة الأصلية
+    // استخراج قسم "عني" من الصفحة الأصلية
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = originalMainHTML;
     let aboutSection = null;
@@ -153,17 +159,16 @@ function renderAboutPage() {
     main.innerHTML = `<div style="padding: 40px 20px; max-width: 800px; margin: 0 auto; direction: rtl; min-height: 70vh;">
         <h1 style="color: #3B82F6; margin-bottom: 30px; text-align: center;">تعرف علي</h1>
         <div style="color: #cbd5e1; line-height: 1.8; font-size: 1.1rem;">
-            ${aboutSection ? aboutSection.innerHTML : '<p>معلومات "عني" غير متوفرة حالياً. يمكنك إضافتها في ملف index.html.</p>'}
+            ${aboutSection ? aboutSection.innerHTML : '<p>معلومات "عني" غير متوفرة حالياً.</p>'}
         </div>
     </div>`;
 }
 
-// 6. صفحة الرئيسية (تجمع الهيرو والمقالات)
+// 6. صفحة الرئيسية
 function renderHomePage() {
     const main = document.querySelector('main') || document.body;
     main.innerHTML = originalMainHTML;
     
-    // إعادة إدراج المقالات في الصفحة الرئيسية
     let container = document.querySelector('.posts-grid') || document.querySelector('#posts-container');
     if (container) {
         let postsHTML = '';
@@ -179,10 +184,10 @@ function renderHomePage() {
         });
         container.innerHTML = postsHTML;
     }
-    fixButtonsAndMenu(); // إعادة تفعيل الأزرار بعد إعادة بناء الصفحة
+    setTimeout(fixButtonsAndMenu, 100); // إعادة تفعيل الأزرار بعد تحميل الرئيسية
 }
 
-// 7. صفحة قراءة المقال
+// 7. صفحة المقال
 function renderSinglePost(slug) {
     const main = document.querySelector('main') || document.body;
     const post = posts.find(p => p.slug === slug);
@@ -201,7 +206,7 @@ function renderSinglePost(slug) {
     }
 }
 
-// 8. نظام التوجيه (Routing)
+// 8. التنقل
 function handleRouting() {
     const hash = window.location.hash;
     
@@ -215,5 +220,5 @@ function handleRouting() {
     } else {
         renderHomePage();
     }
-    window.scrollTo(0,0); // الصعود لأعلى الصفحة عند التنقل
+    window.scrollTo(0,0); 
 }
