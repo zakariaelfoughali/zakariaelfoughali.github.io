@@ -105,3 +105,23 @@ function handleRouting() {
 }
 
 window.addEventListener('hashchange', handleRouting);
+// إعادة تفعيل قائمة الموبايل (الخطوط الثلاثة)
+document.addEventListener('DOMContentLoaded', () => {
+    // نبحث عن زر القائمة (قد يكون له اسم كلاس مختلف)
+    const menuBtn = document.querySelector('.menu-toggle') || document.querySelector('.hamburger') || document.querySelector('header button');
+    
+    // نبحث عن القائمة نفسها
+    const navMenu = document.querySelector('.nav-links') || document.querySelector('.nav-menu') || document.querySelector('nav ul');
+
+    if (menuBtn && navMenu) {
+        menuBtn.addEventListener('click', () => {
+            // عند الضغط، نقوم بإظهار أو إخفاء القائمة
+            navMenu.classList.toggle('active');
+            if (navMenu.style.display === 'flex' || navMenu.style.display === 'block') {
+                navMenu.style.display = 'none';
+            } else {
+                navMenu.style.display = 'flex';
+            }
+        });
+    }
+});
