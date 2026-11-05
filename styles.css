@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&family=Amiri:wght@400;700&display=swap');
 :root {
     --bg: #05070D;
     --surface: #0B1220;
@@ -48,3 +47,7 @@ main { max-width: 800px; margin: 0 auto; padding: 20px; min-height: 80vh; }
 .contact-icon:hover { background: var(--primary); color: #fff; transform: scale(1.1); }
 .contact-icon svg { width: 30px; height: 30px; fill: currentColor; }
 footer { text-align: center; padding: 20px; background: var(--surface); color: var(--muted); margin-top: 40px; border-top: 1px solid var(--border); }
+footer {
+    font-family: 'Amiri', serif !important;
+    font-size: 1.3rem;
+}
