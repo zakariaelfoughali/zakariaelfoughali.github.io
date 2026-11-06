@@ -85,8 +85,8 @@ function renderHome() {
 
     appDiv.innerHTML = `
         <div class="hero" id="home">
-            <h1 style="font-family: 'Amiri', serif; font-size: 3.5rem; color: #E5E7EB; margin-bottom: 20px;">زكرياء الفغالي</h1>
-            <p>كتابات عربية في التأمل والأدب والفكر. نصوص هادئة تُكتب ببطء، وتُقرأ بتمهل.</p>
+            <h1 class="notranslate" style="font-family: 'Amiri', serif; font-size: 3.5rem; color: #E5E7EB; margin-bottom: 20px;">زكرياء الفغالي</h1>
+<p>كتابات عربية في التأمل والأدب والفكر. نصوص هادئة تُكتب ببطء، وتُقرأ بتمهل.</p>
             <div style="margin-top:20px;">
                 <a href="#/posts" class="btn">اقرأ الكتابات</a>
                 <a href="#/about-scroll" class="btn outline">تعرف علي</a>
