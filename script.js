@@ -275,3 +275,12 @@ if (langSelect) {
         window.location.reload();
     };
 }
+// حذف شريط جوجل برمجياً عند تحميل الصفحة
+setTimeout(() => {
+    const googleBanner = document.querySelector('.goog-te-banner-frame');
+    if (googleBanner) {
+        googleBanner.style.display = 'none';
+        googleBanner.remove(); // حذفه من الصفحة
+    }
+    document.body.style.top = '0px'; // إعادة الصفحة لأعلى
+}, 1000);
