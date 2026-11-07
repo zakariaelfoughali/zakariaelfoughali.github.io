@@ -7,37 +7,65 @@
     <style>
         body { font-family: 'Tajawal', sans-serif; background: #05070D; color: #E5E7EB; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 600px; background: #0B1220; padding: 30px; border-radius: 10px; border: 1px solid #1E3A8A; }
-        h2 { text-align: center; color: #3B82F6; margin-bottom: 20px; }
+        h2, h3 { text-align: center; color: #3B82F6; margin-bottom: 20px; }
         input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; background: #101B33; border: 1px solid #1E3A8A; color: #fff; border-radius: 5px; font-family: inherit; box-sizing: border-box; }
-        textarea { height: 300px; resize: vertical; }
+        textarea { height: 200px; resize: vertical; }
         button { width: 100%; padding: 15px; background: #1E3A8A; color: #fff; border: none; border-radius: 5px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { background: #3B82F6; }
         #message { text-align: center; margin-top: 15px; color: #22c55e; font-weight: bold; display: none; }
+        .post-item { background: #1E293B; padding: 15px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid #3B82F6; }
+        .post-title { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: bold; }
+        .btn-edit { background: #F59E0B; padding: 8px 12px; font-size: 0.9rem; margin-right: 5px; width: auto; }
+        .btn-delete { background: #EF4444; padding: 8px 12px; font-size: 0.9rem; width: auto; }
+        #loginScreen { display: none; text-align: center; }
+        #adminContent { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>نشر مقال جديد</h2>
-        <input type="text" id="title" placeholder="عنوان المقال">
-        <select id="type">
-            <option value="مقالة">مقالة</option>
-            <option value="شذرة">شذرة</option>
-            <option value="قصة / رواية">قصة / رواية</option>
-            <option value="خاطرة">خاطرة</option>
-            <option value="اقتباس">اقتباس</option>
-            <option value="رسالة">رسالة</option>
-            <option value="شعر">شعر</option>
-        </select>
-        <label style="display:block; margin-bottom:5px; color:#94A3B8;">إضافة صورة (اختياري):</label>
-        <input type="file" id="imageInput" accept="image/*" style="margin-bottom: 15px;">
-        <textarea id="content" placeholder="اكتب نصك هنا..."></textarea>
-        <button onclick="publishPost()">نشر الآن</button>
-        <div id="message">✅ تم النشر بنجاح! سيظهر في الموقع فوراً.</div>
+        <!-- شاشة تسجيل الدخول -->
+        <div id="loginScreen">
+            <h2>تسجيل الدخول للمدير</h2>
+            <input type="email" id="loginEmail" placeholder="البريد الإلكتروني">
+            <input type="password" id="loginPassword" placeholder="كلمة المرور">
+            <button onclick="login()">دخول</button>
+            <p id="loginError" style="color: red; margin-top: 10px;"></p>
+        </div>
+
+        <!-- لوحة التحكم -->
+        <div id="adminContent">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 id="formTitle" style="margin:0;">نشر مقال جديد</h2>
+                <button onclick="logout()" style="width: auto; padding: 8px 15px; background: #EF4444;">خروج</button>
+            </div>
+            
+            <input type="hidden" id="editId" value="">
+            <input type="text" id="title" placeholder="عنوان المقال">
+            <select id="type">
+                <option value="مقالة">مقالة</option>
+                <option value="شذرة">شذرة</option>
+                <option value="قصة / رواية">قصة / رواية</option>
+                <option value="خاطرة">خاطرة</option>
+                <option value="اقتباس">اقتباس</option>
+                <option value="رسالة">رسالة</option>
+                <option value="شعر">شعر</option>
+            </select>
+            <label style="display:block; margin-bottom:5px; color:#94A3B8;">إضافة صورة (اختياري):</label>
+            <input type="file" id="imageInput" accept="image/*" style="margin-bottom: 15px;">
+            <textarea id="content" placeholder="اكتب نصك هنا..."></textarea>
+            <button id="submitBtn" onclick="publishPost()">نشر الآن</button>
+            <div id="message">✅ تمت العملية بنجاح!</div>
+
+            <hr style="border-color: #1E3A8A; margin: 30px 0;">
+            <h3>إدارة المقالات المنشورة</h3>
+            <div id="postsList">جاري التحميل...</div>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBPNpPnlfxJK-LpLj5ftafkt-BkBkpIdl0",
@@ -50,59 +78,111 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'block';
+                loadPosts();
+            } else {
+                document.getElementById('loginScreen').style.display = 'block';
+                document.getElementById('adminContent').style.display = 'none';
+            }
+        });
+
+        window.login = async function() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                document.getElementById('loginError').innerText = "";
+            } catch (error) {
+                document.getElementById('loginError').innerText = "خطأ في البريد أو كلمة المرور!";
+            }
+        }
+
+        window.logout = async function() { await signOut(auth); }
+
+        async function loadPosts() {
+            const listDiv = document.getElementById('postsList');
+            try {
+                const querySnapshot = await getDocs(collection(db, "posts"));
+                let postsArray = [];
+                querySnapshot.forEach((doc) => { postsArray.push({ id: doc.id, ...doc.data() }); });
+                postsArray.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                listDiv.innerHTML = postsArray.length === 0 ? '<p>لا توجد مقالات.</p>' : '';
+                postsArray.forEach(post => {
+                    const div = document.createElement('div');
+                    div.className = 'post-item';
+                    div.innerHTML = `<div class="post-title">${post.title}</div>
+                        <div style="display: flex; gap: 5px;">
+                            <button onclick="editPost('${post.id}')" class="btn-edit">تعديل</button>
+                            <button onclick="deletePost('${post.id}')" class="btn-delete">حذف</button>
+                        </div>`;
+                    listDiv.appendChild(div);
+                });
+            } catch (e) { listDiv.innerHTML = 'خطأ: ' + e.message; }
+        }
+
+        window.deletePost = async function(id) {
+            if (confirm("تأكيد الحذف؟")) {
+                await deleteDoc(doc(db, "posts", id));
+                loadPosts();
+            }
+        }
+
+        window.editPost = async function(id) {
+            const docSnap = await getDoc(doc(db, "posts", id));
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('title').value = data.title;
+                document.getElementById('type').value = data.type;
+                document.getElementById('content').value = data.content;
+                document.getElementById('editId').value = id;
+                document.getElementById('formTitle').innerText = "تعديل المقال";
+                document.getElementById('submitBtn').innerText = "حفظ التعديلات";
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
 
         window.publishPost = async function() {
             const title = document.getElementById('title').value;
             const type = document.getElementById('type').value;
             const content = document.getElementById('content').value;
             const imageFile = document.getElementById('imageInput').files[0];
-
-            if (!title || !content) {
-                alert("يرجى كتابة العنوان والمحتوى!");
-                return;
-            }
-
-            const btn = document.querySelector('button');
-            btn.innerText = "جاري النشر...";
-            btn.disabled = true;
-
+            const editId = document.getElementById('editId').value;
+            if (!title || !content) return alert("يرجى ملء الحقول!");
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "جاري الحفظ..."; btn.disabled = true;
             try {
                 let imageUrl = "";
-
                 if (imageFile) {
                     const formData = new FormData();
                     formData.append('file', imageFile);
                     formData.append('upload_preset', 'ml_default');
-                    
-                    const cloudinaryResponse = await fetch('https://api.cloudinary.com/v1_1/nssm2ydj/image/upload', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const cloudinaryData = await cloudinaryResponse.json();
-                    imageUrl = cloudinaryData.secure_url;
+                    const res = await fetch('https://api.cloudinary.com/v1_1/nssm2ydj/image/upload', { method: 'POST', body: formData });
+                    imageUrl = (await res.json()).secure_url;
                 }
+                if (editId) {
+                    const upData = { title, type, content };
+                    if (imageUrl) upData.image = imageUrl;
+                    await updateDoc(doc(db, "posts", editId), upData);
+                } else {
+                    await addDoc(collection(db, "posts"), { title, type, content, date: new Date().toLocaleDateString('en-GB'), timestamp: Date.now(), image: imageUrl });
+                }
+                document.getElementById('title').value = ''; document.getElementById('content').value = '';
+                document.getElementById('editId').value = ''; document.getElementById('formTitle').innerText = "نشر مقال جديد";
+                document.getElementById('submitBtn').innerText = "نشر الآن";
+                loadPosts(); alert("تم الحفظ بنجاح!");
+            } catch (e) { alert("خطأ: " + e.message); } finally { btn.disabled = false; }
+        }
 
-                await addDoc(collection(db, "posts"), {
-                    title: title,
-                    type: type,
-                    content: content,
-                    date: new Date().toLocaleDateString('en-GB'),
-                    timestamp: Date.now(),
-                    image: imageUrl 
-                });
-                
-                document.getElementById('message').style.display = 'block';
-                document.getElementById('title').value = '';
-                document.getElementById('content').value = '';
-                document.getElementById('imageInput').value = '';
-                
-                setTimeout(() => { document.getElementById('message').style.display = 'none'; }, 3000);
-            } catch (e) {
-                alert("حدث خطأ: " + e.message);
-            } finally {
-                btn.innerText = "نشر الآن";
-                btn.disabled = false;
-            }
+        // فتح التعديل تلقائياً إذا تم الضغط عليه من الموقع الرئيسي
+        const urlParams = new URLSearchParams(window.location.search);
+        const postIdToEdit = urlParams.get('id');
+        if (postIdToEdit) {
+            setTimeout(() => { editPost(postIdToEdit); }, 1500); 
         }
     </script>
 </body>
