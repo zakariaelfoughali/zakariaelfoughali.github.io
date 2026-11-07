@@ -16,7 +16,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let posts = [];
-let isAdmin = false; // متغير لمعرفة هل المستخدم مدير أم لا
+let isAdmin = false; 
 const appDiv = document.getElementById('app');
 const navMenu = document.getElementById('nav-menu');
 const menuBtn = document.getElementById('menu-btn');
@@ -26,10 +26,10 @@ onAuthStateChanged(auth, (user) => {
     const adminLink = document.getElementById('admin-publish-link');
     if (user) {
         isAdmin = true;
-        if (adminLink) adminLink.style.display = 'block'; // إظهار زر النشر لك
+        if (adminLink) adminLink.style.display = 'block'; 
     } else {
         isAdmin = false;
-        if (adminLink) adminLink.style.display = 'none'; // إخفاء زر النشر عن الزوار
+        if (adminLink) adminLink.style.display = 'none'; 
     }
     render();
 });
@@ -69,13 +69,13 @@ async function fetchPosts() {
             const data = doc.data();
             posts.push({
                 id: doc.id,
-                title: data.title,
-                type: data.type,
-                content: data.content,
-                date: data.date,
+                title: data.title || 'بدون عنوان',
+                type: data.type || 'مقالة',
+                content: data.content || '',
+                date: data.date || '',
                 timestamp: data.timestamp || 0,
                 image: data.image || null,
-                excerpt: data.content.substring(0, 120) + '...'
+                excerpt: data.content ? data.content.substring(0, 120) + '...' : ''
             });
         });
         posts.sort((a, b) => b.timestamp - a.timestamp); 
@@ -86,7 +86,6 @@ async function fetchPosts() {
     }
 }
 
-// إنشاء كود النقاط الثلاث (يظهر فقط للمدير)
 function getAdminMenu(postId) {
     if (!isAdmin) return '';
     return `
@@ -107,7 +106,8 @@ function renderHome() {
                 <span style="background: #1E3A8A; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem; color: #fff; margin-bottom: 10px; display: inline-block;">${post.type}</span>
                 <h3 style="margin-top: 5px;">${post.title}</h3>
                 <small>${post.date}</small>
-${post.image ? `<a href="#/post/${post.id}" style="display: flex; justify-content: center; width: 100%; margin-bottom: 10px;"><img src="${post.image}" style="width: 100%; max-height: 450px; object-fit: cover; border-radius: 8px; cursor: pointer;"></a>` : ''}                <p>${post.excerpt}</p>
+                ${post.image ? `<a href="#/post/${post.id}" style="display: flex; justify-content: center; width: 100%; margin-bottom: 10px;"><img src="${post.image}" style="width: 100%; max-height: 450px; object-fit: cover; border-radius: 8px; cursor: pointer;"></a>` : ''}
+                <p>${post.excerpt}</p>
                 <a href="#/post/${post.id}">اقرأ المزيد &larr;</a>
             </div>
         `;
@@ -152,7 +152,9 @@ function renderCategory(categoryName) {
                 <span style="background: #1E3A8A; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem; color: #fff; margin-bottom: 10px; display: inline-block;">${post.type}</span>
                 <h3 style="margin-top: 5px;">${post.title}</h3>
                 <small>${post.date}</small>
-${post.image ? `<a href="#/post/${post.id}" style="display: flex; justify-content: center; width: 100%; margin-bottom: 10px;"><img src="${post.image}" style="width: 100%; max-height: 450px; object-fit: cover; border-radius: 8px; cursor: pointer;"></a>` : ''}                <a href="#/post/${post.id}">اقرأ المزيد &larr;</a>
+                ${post.image ? `<a href="#/post/${post.id}" style="display: flex; justify-content: center; width: 100%; margin-bottom: 10px;"><img src="${post.image}" style="width: 100%; max-height: 450px; object-fit: cover; border-radius: 8px; cursor: pointer;"></a>` : ''}
+                <p>${post.excerpt}</p>
+                <a href="#/post/${post.id}">اقرأ المزيد &larr;</a>
             </div>
         `;
     });
@@ -176,10 +178,10 @@ function renderSinglePost(id) {
     `;
 }
 
-// دوال النقاط الثلاث
 window.toggleMenu = function(id, event) {
     event.stopPropagation();
     const menu = document.getElementById(`menu-${id}`);
+    if (!menu) return;
     document.querySelectorAll('.post-dropdown').forEach(el => {
         if (el.id !== `menu-${id}`) el.style.display = 'none';
     });
@@ -222,60 +224,61 @@ function render() {
         setTimeout(() => document.getElementById('contact-section').scrollIntoView({ behavior: 'smooth' }), 100);
     }
     
-    navMenu.classList.remove('active');
+    if (navMenu) navMenu.classList.remove('active');
     if (hash !== '#/about-scroll' && hash !== '#/contact-scroll') window.scrollTo(0, 0);
 }
 
 window.addEventListener('hashchange', render);
 
-menuBtn.onclick = function(e) {
-    e.preventDefault();
-    if (navMenu.style.display === 'flex') {
-        navMenu.style.display = 'none';
-        document.body.style.overflow = ''; // إعادة تفعيل التمرير للصفحة
-    } else {
-        navMenu.style.display = 'flex';
-        navMenu.style.flexDirection = 'column';
-        navMenu.style.position = 'absolute';
-        navMenu.style.top = '100%';
-        navMenu.style.left = '0';
-        navMenu.style.width = '100%';
-        navMenu.style.backgroundColor = '#0B1220';
-        navMenu.style.padding = '20px';
-        navMenu.style.zIndex = '99999';
-        navMenu.style.boxShadow = '0 10px 10px rgba(0,0,0,0.5)';
-        
-        navMenu.style.maxHeight = '80vh'; 
-        navMenu.style.overflowY = 'auto'; 
-        document.body.style.overflow = 'hidden'; // قفل تمرير الصفحة الخلفية
-    }
-};
+// حماية زر القائمة
+if (menuBtn && navMenu) {
+    menuBtn.onclick = function(e) {
+        e.preventDefault();
+        if (navMenu.style.display === 'flex') {
+            navMenu.style.display = 'none';
+            document.body.style.overflow = ''; 
+        } else {
+            navMenu.style.display = 'flex';
+            navMenu.style.flexDirection = 'column';
+            navMenu.style.position = 'absolute';
+            navMenu.style.top = '100%';
+            navMenu.style.left = '0';
+            navMenu.style.width = '100%';
+            navMenu.style.backgroundColor = '#0B1220';
+            navMenu.style.padding = '20px';
+            navMenu.style.zIndex = '99999';
+            navMenu.style.boxShadow = '0 10px 10px rgba(0,0,0,0.5)';
+            navMenu.style.maxHeight = '80vh'; 
+            navMenu.style.overflowY = 'auto'; 
+            document.body.style.overflow = 'hidden'; 
+        }
+    };
 
-navMenu.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => { 
-        navMenu.style.display = 'none'; 
-        document.body.style.overflow = ''; // إعادة تفعيل التمرير بعد اختيار رابط
+    navMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => { 
+            navMenu.style.display = 'none'; 
+            document.body.style.overflow = ''; 
+        });
     });
-});
+}
 
-// إعدادات اللغة والوضع النهاري
+// حماية إعدادات اللغة والوضع النهاري
 const settingsBtn = document.getElementById('settings-btn');
 const settingsPanel = document.getElementById('settings-panel');
 const themeToggle = document.getElementById('theme-toggle');
 const langSelect = document.getElementById('lang-select');
 
-if (settingsBtn) {
+if (settingsBtn && settingsPanel) {
     settingsBtn.onclick = (e) => {
         e.stopPropagation();
         settingsPanel.style.display = settingsPanel.style.display === 'none' ? 'block' : 'none';
     };
+    document.addEventListener('click', (e) => {
+        if (!settingsPanel.contains(e.target) && e.target !== settingsBtn) {
+            settingsPanel.style.display = 'none';
+        }
+    });
 }
-
-document.addEventListener('click', (e) => {
-    if (settingsPanel && settingsBtn && !settingsPanel.contains(e.target) && e.target !== settingsBtn) {
-        settingsPanel.style.display = 'none';
-    }
-});
 
 if (themeToggle) {
     themeToggle.onclick = () => {
@@ -309,7 +312,6 @@ if (langSelect) {
     };
 }
 
-// إخفاء شريط جوجل
 setTimeout(() => {
     const googleBanner = document.querySelector('.goog-te-banner-frame');
     if (googleBanner) {
