@@ -104,7 +104,7 @@ function renderHome() {
                 <span style="background: #1E3A8A; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem; color: #fff; margin-bottom: 10px; display: inline-block;">${post.type}</span>
                 <h3 style="margin-top: 5px;">${post.title}</h3>
                 <small>${post.date}</small>
-                ${post.image ? `<a href="#/post/${post.id}"><img src="${post.image}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; cursor: pointer;"></a>` : ''}
+                ${post.image ? `<a href="#/post/${post.id}"><img src="${post.image}" style="display: block; width: 100%; height: auto; max-height: 500px; object-fit: contain; border-radius: 8px; margin: 0 auto 10px auto; cursor: pointer; background-color: #05070D;"></a>` : ''}
                 <p>${post.excerpt}</p>
                 <a href="#/post/${post.id}">اقرأ المزيد &larr;</a>
             </div>
@@ -150,8 +150,7 @@ function renderCategory(categoryName) {
                 <span style="background: #1E3A8A; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem; color: #fff; margin-bottom: 10px; display: inline-block;">${post.type}</span>
                 <h3 style="margin-top: 5px;">${post.title}</h3>
                 <small>${post.date}</small>
-                ${post.image ? `<a href="#/post/${post.id}"><img src="${post.image}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; cursor: pointer;"></a>` : ''}
-                <p>${post.excerpt}</p>
+${post.image ? `<a href="#/post/${post.id}"><img src="${post.image}" style="display: block; width: 100%; height: auto; max-height: 500px; object-fit: contain; border-radius: 8px; margin: 0 auto 10px auto; cursor: pointer; background-color: #05070D;"></a>` : ''}                <p>${post.excerpt}</p>
                 <a href="#/post/${post.id}">اقرأ المزيد &larr;</a>
             </div>
         `;
