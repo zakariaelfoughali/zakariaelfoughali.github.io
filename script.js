@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBPNpPnlfxJK-LpLj5ftafkt-BkBkpIdl0",
@@ -12,11 +13,23 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 let posts = [];
+let isAdmin = false; // متغير لمعرفة هل المستخدم مدير أم لا
 const appDiv = document.getElementById('app');
 const navMenu = document.getElementById('nav-menu');
 const menuBtn = document.getElementById('menu-btn');
+
+// مراقبة حالة الدخول
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        isAdmin = true; // المستخدم مسجل دخول
+    } else {
+        isAdmin = false; // المستخدم زائر عادي
+    }
+    render(); // إعادة رسم الصفحة لإظهار/إخفاء النقاط الثلاث
+});
 
 const bioText = `
     <p>زكرياء الفغالي كاتب ومحلّل مغربي من مدينة وجدة، من مواليد 22 ماي 2000، يبلغ من العمر 26 سنة. يشتغل على الكتابة بوصفها مساحة للتفكير والتحليل واكتشاف الذات والعالم، ويكتب في الفلسفة والشذرات والمقالات والروايات والكتب الذاتية، دون أن يحصر نفسه في جنس كتابي واحد. يرى في الكتابة امتدادًا لشغف أعمق بالمعرفة والعلوم والتعلم المستمر، ويستلهم من التاريخ والحضارات والعلوم القديمة والحديثة ما يوسّع أفق النص ويمنحه عمقًا إنسانيًا.</p>
@@ -58,10 +71,11 @@ async function fetchPosts() {
                 content: data.content,
                 date: data.date,
                 timestamp: data.timestamp || 0,
+                image: data.image || null,
                 excerpt: data.content.substring(0, 120) + '...'
             });
         });
-        posts.sort((a, b) => b.timestamp - a.timestamp); // الترتيب حسب الأحدث
+        posts.sort((a, b) => b.timestamp - a.timestamp); 
         render(); 
     } catch (e) { 
         console.error(e); 
@@ -69,14 +83,28 @@ async function fetchPosts() {
     }
 }
 
+// إنشاء كود النقاط الثلاث (يظهر فقط للمدير)
+function getAdminMenu(postId) {
+    if (!isAdmin) return '';
+    return `
+        <button class="post-menu-btn" onclick="toggleMenu('${postId}', event)">⋮</button>
+        <div class="post-dropdown" id="menu-${postId}">
+            <a href="admin.html?id=${postId}">تعديل المقال</a>
+            <button onclick="deletePostMain('${postId}')">حذف المقال</button>
+        </div>
+    `;
+}
+
 function renderHome() {
-    let postsHTML = posts.length === 0 ? '<p>لا توجد مقالات بعد. اذهب إلى /admin.html واكتب مقالك الأول!</p>' : '';
+    let postsHTML = posts.length === 0 ? '<p>لا توجد مقالات بعد.</p>' : '';
     posts.forEach(post => {
         postsHTML += `
             <div class="post-card">
+                ${getAdminMenu(post.id)}
                 <span style="background: #1E3A8A; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem; color: #fff; margin-bottom: 10px; display: inline-block;">${post.type}</span>
                 <h3 style="margin-top: 5px;">${post.title}</h3>
                 <small>${post.date}</small>
+                ${post.image ? `<img src="${post.image}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;">` : ''}
                 <p>${post.excerpt}</p>
                 <a href="#/post/${post.id}">اقرأ المزيد &larr;</a>
             </div>
@@ -86,7 +114,7 @@ function renderHome() {
     appDiv.innerHTML = `
         <div class="hero" id="home">
             <h1 class="notranslate" style="font-family: 'Amiri', serif; font-size: 3.5rem; color: #E5E7EB; margin-bottom: 20px;">زكرياء الفغالي</h1>
-<p>كتابات عربية في التأمل والأدب والفكر. نصوص هادئة تُكتب ببطء، وتُقرأ بتمهل.</p>
+            <p>كتابات عربية في التأمل والأدب والفكر. نصوص هادئة تُكتب ببطء، وتُقرأ بتمهل.</p>
             <div style="margin-top:20px;">
                 <a href="#/posts" class="btn">اقرأ الكتابات</a>
                 <a href="#/about-scroll" class="btn outline">تعرف علي</a>
@@ -107,24 +135,22 @@ function renderHome() {
     `;
 }
 
-// دالة عرض الأقسام (الفلترة)
 function renderCategory(categoryName) {
     let filteredPosts = posts;
-    
-    // إذا لم يكن "الكل"، نقوم بالفلترة حسب القسم
     if (categoryName !== 'الكل') {
         filteredPosts = posts.filter(p => p.type === categoryName);
     }
 
-    // رسالة في حال كان القسم فارغاً
     let postsHTML = filteredPosts.length === 0 ? `<p style="text-align:center; padding: 50px; color:#fff; font-size:1.2rem;">لا توجد منشورات في قسم "${categoryName}" بعد.</p>` : '';
     
     filteredPosts.forEach(post => {
         postsHTML += `
             <div class="post-card" style="margin-bottom: 20px;">
+                ${getAdminMenu(post.id)}
                 <span style="background: #1E3A8A; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem; color: #fff; margin-bottom: 10px; display: inline-block;">${post.type}</span>
                 <h3 style="margin-top: 5px;">${post.title}</h3>
                 <small>${post.date}</small>
+                ${post.image ? `<img src="${post.image}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;">` : ''}
                 <p>${post.excerpt}</p>
                 <a href="#/post/${post.id}">اقرأ المزيد &larr;</a>
             </div>
@@ -144,20 +170,43 @@ function renderSinglePost(id) {
             <a href="#/" style="color: var(--accent); text-decoration: none; display: inline-block; margin-bottom: 20px; font-weight: bold;">&rarr; العودة للرئيسية</a>
             <h1 style="color: var(--accent);">${post.title}</h1>
             <small style="color: var(--muted); display: block; margin-bottom: 20px;">${post.date} | ${post.type}</small>
+            ${post.image ? `<img src="${post.image}" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 10px; margin-bottom: 20px;">` : ''}
             <div style="margin-top: 30px; font-size: 1.1rem; white-space: pre-wrap;">${post.content}</div>
         </div>
     `;
 }
 
+// دوال النقاط الثلاث
+window.toggleMenu = function(id, event) {
+    event.stopPropagation();
+    const menu = document.getElementById(`menu-${id}`);
+    document.querySelectorAll('.post-dropdown').forEach(el => {
+        if (el.id !== `menu-${id}`) el.style.display = 'none';
+    });
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+};
+
+document.addEventListener('click', () => {
+    document.querySelectorAll('.post-dropdown').forEach(el => el.style.display = 'none');
+});
+
+window.deletePostMain = async function(id) {
+    if (confirm("هل أنت متأكد من حذف هذا المقال نهائياً؟")) {
+        try {
+            await deleteDoc(doc(db, "posts", id));
+            alert("تم الحذف بنجاح!");
+            window.location.reload();
+        } catch (e) {
+            alert("حدث خطأ أثناء الحذف: " + e.message);
+        }
+    }
+};
+
 function render() {
     const hash = window.location.hash || '#/';
     
-    if (hash === '#/' || hash === '') { 
-        renderHome(); 
-    } 
-    else if (hash === '#/posts') { 
-        renderCategory('الكل'); 
-    } 
+    if (hash === '#/' || hash === '') { renderHome(); } 
+    else if (hash === '#/posts') { renderCategory('الكل'); } 
     else if (hash.startsWith('#/category/')) { 
         const category = decodeURIComponent(hash.replace('#/category/', '')); 
         renderCategory(category); 
@@ -197,25 +246,16 @@ menuBtn.onclick = function(e) {
     }
 };
 
-// إغلاق القائمة تلقائياً عند الضغط على أي رابط
 navMenu.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => {
-        navMenu.style.display = 'none';
-    });
+    link.addEventListener('click', () => { navMenu.style.display = 'none'; });
 });
 
-fetchPosts();
-// ==========================================
-// إعدادات الموقع (اللغة والوضع النهاري)
-// ==========================================
-
-// 1. تفعيل الوضع النهاري/الليلي
+// إعدادات اللغة والوضع النهاري
 const settingsBtn = document.getElementById('settings-btn');
 const settingsPanel = document.getElementById('settings-panel');
 const themeToggle = document.getElementById('theme-toggle');
 const langSelect = document.getElementById('lang-select');
 
-// فتح وإغلاق لوحة الإعدادات
 if (settingsBtn) {
     settingsBtn.onclick = (e) => {
         e.stopPropagation();
@@ -223,14 +263,12 @@ if (settingsBtn) {
     };
 }
 
-// إغلاق اللوحة عند النقر خارجها
 document.addEventListener('click', (e) => {
     if (settingsPanel && settingsBtn && !settingsPanel.contains(e.target) && e.target !== settingsBtn) {
         settingsPanel.style.display = 'none';
     }
 });
 
-// تبديل الوضع
 if (themeToggle) {
     themeToggle.onclick = () => {
         document.body.classList.toggle('light-mode');
@@ -242,45 +280,35 @@ if (themeToggle) {
     };
 }
 
-// استرجاع الوضع المحفوظ عند فتح الموقع
 if (localStorage.getItem('theme') === 'light') {
     document.body.classList.add('light-mode');
 }
 
-
-// 2. تفعيل تغيير اللغة عبر جوجل
 if (langSelect) {
-    // استرجاع اللغة المحفوظة
     const savedLang = localStorage.getItem('lang');
-    if (savedLang) {
-        langSelect.value = savedLang;
-    }
-
+    if (savedLang) langSelect.value = savedLang;
     langSelect.onchange = (e) => {
         const selectedLang = e.target.value;
         localStorage.setItem('lang', selectedLang);
-        
-        // إعداد كوكيز جوجل للترجمة
         if (selectedLang === 'ar') {
-            // إذا اختار العربية، نحذف الكوكيز لتعود الصفحة لأصلها
             document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
         } else {
-            // تعيين لغة الترجمة
             document.cookie = "googtrans=/ar/" + selectedLang + "; path=/";
             document.cookie = "googtrans=/ar/" + selectedLang + "; path=/; domain=" + window.location.hostname;
         }
-        
-        // إعادة تحميل الصفحة لتطبيق الترجمة
         window.location.reload();
     };
 }
-// حذف شريط جوجل برمجياً عند تحميل الصفحة
+
+// إخفاء شريط جوجل
 setTimeout(() => {
     const googleBanner = document.querySelector('.goog-te-banner-frame');
     if (googleBanner) {
         googleBanner.style.display = 'none';
-        googleBanner.remove(); // حذفه من الصفحة
+        googleBanner.remove();
     }
-    document.body.style.top = '0px'; // إعادة الصفحة لأعلى
+    document.body.style.top = '0px';
 }, 1000);
+
+fetchPosts();
