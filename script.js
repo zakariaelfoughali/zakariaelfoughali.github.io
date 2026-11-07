@@ -229,7 +229,6 @@ function render() {
 window.addEventListener('hashchange', render);
 
 menuBtn.onclick = function(e) {
-menuBtn.onclick = function(e) {
     e.preventDefault();
     if (navMenu.style.display === 'flex') {
         navMenu.style.display = 'none';
