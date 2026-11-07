@@ -34,10 +34,13 @@
 
         <!-- لوحة التحكم -->
         <div id="adminContent">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 id="formTitle" style="margin:0;">نشر مقال جديد</h2>
-                <button onclick="logout()" style="width: auto; padding: 8px 15px; background: #EF4444;">خروج</button>
-            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+    <h2 id="formTitle" style="margin:0;">نشر مقال جديد</h2>
+    <div style="display: flex; gap: 5px;">
+        <a href="/" style="padding: 8px 15px; background: #3B82F6; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem;">العودة للموقع</a>
+        <button onclick="logout()" style="width: auto; padding: 8px 15px; background: #EF4444; font-size: 0.9rem; margin: 0;">خروج</button>
+    </div>
+</div>
             
             <input type="hidden" id="editId" value="">
             <input type="text" id="title" placeholder="عنوان المقال">
