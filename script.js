@@ -23,12 +23,15 @@ const menuBtn = document.getElementById('menu-btn');
 
 // مراقبة حالة الدخول
 onAuthStateChanged(auth, (user) => {
+    const adminLink = document.getElementById('admin-publish-link');
     if (user) {
-        isAdmin = true; // المستخدم مسجل دخول
+        isAdmin = true;
+        if (adminLink) adminLink.style.display = 'block'; // إظهار زر النشر لك
     } else {
-        isAdmin = false; // المستخدم زائر عادي
+        isAdmin = false;
+        if (adminLink) adminLink.style.display = 'none'; // إخفاء زر النشر عن الزوار
     }
-    render(); // إعادة رسم الصفحة لإظهار/إخفاء النقاط الثلاث
+    render();
 });
 
 const bioText = `
