@@ -243,6 +243,10 @@ menuBtn.onclick = function(e) {
         navMenu.style.padding = '20px';
         navMenu.style.zIndex = '99999';
         navMenu.style.boxShadow = '0 10px 10px rgba(0,0,0,0.5)';
+        
+        // الكود الجديد لحل مشكلة التمرير
+        navMenu.style.maxHeight = '80vh'; // تحديد أقصى ارتفاع للقائمة
+        navMenu.style.overflowY = 'auto'; // السماح بالتمرير للأسفل
     }
 };
 
