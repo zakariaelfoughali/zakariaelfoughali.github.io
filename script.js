@@ -229,9 +229,11 @@ function render() {
 window.addEventListener('hashchange', render);
 
 menuBtn.onclick = function(e) {
+menuBtn.onclick = function(e) {
     e.preventDefault();
     if (navMenu.style.display === 'flex') {
         navMenu.style.display = 'none';
+        document.body.style.overflow = ''; // إعادة تفعيل التمرير للصفحة
     } else {
         navMenu.style.display = 'flex';
         navMenu.style.flexDirection = 'column';
@@ -244,14 +246,17 @@ menuBtn.onclick = function(e) {
         navMenu.style.zIndex = '99999';
         navMenu.style.boxShadow = '0 10px 10px rgba(0,0,0,0.5)';
         
-        // الكود الجديد لحل مشكلة التمرير
-        navMenu.style.maxHeight = '80vh'; // تحديد أقصى ارتفاع للقائمة
-        navMenu.style.overflowY = 'auto'; // السماح بالتمرير للأسفل
+        navMenu.style.maxHeight = '80vh'; 
+        navMenu.style.overflowY = 'auto'; 
+        document.body.style.overflow = 'hidden'; // قفل تمرير الصفحة الخلفية
     }
 };
 
 navMenu.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => { navMenu.style.display = 'none'; });
+    link.addEventListener('click', () => { 
+        navMenu.style.display = 'none'; 
+        document.body.style.overflow = ''; // إعادة تفعيل التمرير بعد اختيار رابط
+    });
 });
 
 // إعدادات اللغة والوضع النهاري
